@@ -1,0 +1,32 @@
+name: scdori_env
+channels:
+  - pytorch
+  - nvidia
+  - bioconda
+  - conda-forge
+
+dependencies:
+  - python=3.10
+  - pytorch=2.3.1
+  - pytorch-cuda=11.8
+  - bedtools=2.31.1
+  - anndata
+  - numpy
+  - pandas
+  - scanpy=1.10.4
+  - pip
+  - seaborn
+  - python-igraph 
+  - leidenalg
+  - seaborn
+  - jupyter
+  - matplotlib<3.8
+  - pip:
+    - gtfparse
+    - tangermeme
+    - scikit_learn
+    - scipy
+    - umap_learn
+    - harmonypy
+    - tqdm
+    

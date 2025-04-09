@@ -1,0 +1,43 @@
+{
+  "template": "https://github.com/scverse/cookiecutter-scverse",
+  "commit": "e3507b3e60fea4b07e56fbf0a951de1fbe2c27ee",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "project_name": "scDoRI",
+      "package_name": "scdori",
+      "project_description": "scDoRI (single-cell Deep multi-Omic Regulatory Inference) is a deep learning model to infer enhancer-mediated gene regulatory networks (eGRNs) from single-cell multiome data (RNA + ATAC).",
+      "author_full_name": "Manu Saraswat",
+      "author_email": "manu.saraswat10@gmail.com",
+      "github_user": "bioFAM",
+      "github_repo": "scDoRI",
+      "license": "MIT License",
+      "ide_integration": true,
+      "_copy_without_render": [
+        ".github/workflows/build.yaml",
+        ".github/workflows/test.yaml",
+        "docs/_templates/autosummary/**.rst"
+      ],
+      "_exclude_on_template_update": [
+        "CHANGELOG.md",
+        "LICENSE",
+        "README.md",
+        "docs/api.md",
+        "docs/index.md",
+        "docs/notebooks/example.ipynb",
+        "docs/references.bib",
+        "docs/references.md",
+        "src/**",
+        "tests/**"
+      ],
+      "_render_devdocs": false,
+      "_jinja2_env_vars": {
+        "lstrip_blocks": true,
+        "trim_blocks": true
+      },
+      "_template": "https://github.com/scverse/cookiecutter-scverse",
+      "_commit": "e3507b3e60fea4b07e56fbf0a951de1fbe2c27ee"
+    }
+  },
+  "directory": null
+}
