@@ -1,8 +1,6 @@
 # scDoRI: Single-cell Deep Multi-Omic Regulatory Inference
 
-[![codecov][badge-codecov]][codecov]
-
-[badge-codecov]: https://codecov.io/gh/bioFAM/scDoRI/graph/badge.svg?token=RK6G4LBUHL
+[![codecov](https://codecov.io/gh/bioFAM/scDoRI/graph/badge.svg?token=RK6G4LBUHL)](https://codecov.io/gh/bioFAM/scDoRI)
 
 ![scDoRI Schematic](docs/_static/scdori_schematic_main.png)
 
