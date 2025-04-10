@@ -163,6 +163,7 @@ def get_tf_expression(
         return tf_normalised.to(device)
 
 
+@torch.no_grad()
 def compute_eval_loss_grn(
     model,
     device,
@@ -211,12 +212,7 @@ def compute_eval_loss_grn(
         (eval_loss, eval_loss_atac, eval_loss_tf, eval_loss_rna, eval_loss_rna_grn).
     """
     model.eval()
-    running_loss = 0.0
-    running_loss_atac = 0.0
-    running_loss_tf = 0.0
-    running_loss_rna = 0.0
-    running_loss_rna_grn = 0.0
-    nbatch = 0
+    running_stats = {"loss": 0.0, "loss_atac": 0.0, "loss_tf": 0.0, "loss_rna": 0.0, "loss_rna_grn": 0.0, "count": 0}
 
     topic_tf_input = get_tf_expression(
         config_file.tf_expression_mode,
@@ -230,94 +226,95 @@ def compute_eval_loss_grn(
         encoding_batch_onehot,
         config_file,
     )
+    
+    criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction="sum")
+    alpha_tf = torch.nn.functional.softplus(model.tf_alpha_nb).repeat(B, 1)
+    alpha_rna = torch.nn.functional.softplus(model.rna_alpha_nb).repeat(B, 1)
 
-    with torch.no_grad():
-        for batch_data in eval_loader:
-            cell_indices = batch_data[0].to(device)
-            B = cell_indices.shape[0]
+    for batch_data in eval_loader:
+        cell_indices = batch_data[0].to(device)
+        B = cell_indices.shape[0]
 
-            input_matrix, tf_exp, library_size_value, num_cells_value, input_batch = create_minibatch(
-                device, cell_indices, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
-            )
-            rna_input = input_matrix[:, : model.num_genes]
-            atac_input = input_matrix[:, model.num_genes :]
-            log_lib_rna = library_size_value[:, 0].reshape(-1, 1)
-            log_lib_atac = library_size_value[:, 1].reshape(-1, 1)
+        input_matrix, tf_exp, library_size_value, num_cells_value, input_batch = create_minibatch(
+            device, cell_indices, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
+        )
+        rna_input = input_matrix[:, : model.num_genes]
+        atac_input = input_matrix[:, model.num_genes :]
+        log_lib_rna = library_size_value[:, 0].reshape(-1, 1)
+        log_lib_atac = library_size_value[:, 1].reshape(-1, 1)
 
-            out = model(
-                rna_input,
-                atac_input,
-                tf_exp,
-                topic_tf_input,
-                log_lib_rna,
-                log_lib_atac,
-                num_cells_value,
-                input_batch,
-                phase="grn",
-            )
-            preds_atac = out["preds_atac"]
-            mu_nb_tf = out["mu_nb_tf"]
-            mu_nb_rna = out["mu_nb_rna"]
-            mu_nb_rna_grn = out["mu_nb_rna_grn"]
+        out = model(
+            rna_input,
+            atac_input,
+            tf_exp,
+            topic_tf_input,
+            log_lib_rna,
+            log_lib_atac,
+            num_cells_value,
+            input_batch,
+            phase="grn",
+        )
+        preds_atac = out["preds_atac"]
+        mu_nb_tf = out["mu_nb_tf"]
+        mu_nb_rna = out["mu_nb_rna"]
+        mu_nb_rna_grn = out["mu_nb_rna_grn"]
 
-            criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction="sum")
-            library_factor_peak = torch.exp(log_lib_atac.view(B, 1))
-            preds_poisson = preds_atac * library_factor_peak
-            loss_atac = criterion_poisson(preds_poisson, atac_input)
+        library_factor_peak = torch.exp(log_lib_atac.view(B, 1))
+        preds_poisson = preds_atac * library_factor_peak
+        loss_atac = criterion_poisson(preds_poisson, atac_input)
 
-            alpha_tf = torch.nn.functional.softplus(model.tf_alpha_nb).repeat(B, 1)
-            nb_tf_ll = log_nb_positive(tf_exp, mu_nb_tf, alpha_tf).sum(dim=1).mean()
-            loss_tf = -nb_tf_ll
+        nb_tf_ll = log_nb_positive(tf_exp, mu_nb_tf, alpha_tf).sum(dim=1).mean()
+        loss_tf = -nb_tf_ll
 
-            alpha_rna = torch.nn.functional.softplus(model.rna_alpha_nb).repeat(B, 1)
-            nb_rna_ll = log_nb_positive(rna_input, mu_nb_rna, alpha_rna).sum(dim=1).mean()
-            loss_rna = -nb_rna_ll
+        nb_rna_ll = log_nb_positive(rna_input, mu_nb_rna, alpha_rna).sum(dim=1).mean()
+        loss_rna = -nb_rna_ll
 
-            nb_rna_grn_ll = log_nb_positive(rna_input, mu_nb_rna_grn, alpha_rna).sum(dim=1).mean()
-            loss_rna_grn = -nb_rna_grn_ll
+        nb_rna_grn_ll = log_nb_positive(rna_input, mu_nb_rna_grn, alpha_rna).sum(dim=1).mean()
+        loss_rna_grn = -nb_rna_grn_ll
 
-            l1_norm_tf = torch.norm(model.topic_tf_decoder.data, p=1)
-            l2_norm_tf = torch.norm(model.topic_tf_decoder.data, p=2)
-            l1_norm_peak = torch.norm(model.topic_peak_decoder.data, p=1)
-            l2_norm_peak = torch.norm(model.topic_peak_decoder.data, p=2)
-            l1_norm_gene_peak = torch.norm(model.gene_peak_factor_learnt.data, p=1)
-            l2_norm_gene_peak = torch.norm(model.gene_peak_factor_learnt.data, p=2)
-            l1_norm_grn_activator = torch.norm(model.tf_gene_topic_activator_grn.data, p=1)
-            l1_norm_grn_repressor = torch.norm(model.tf_gene_topic_repressor_grn.data, p=1)
+        l1_norm_tf = torch.norm(model.topic_tf_decoder.data, p=1)
+        l2_norm_tf = torch.norm(model.topic_tf_decoder.data, p=2)
+        l1_norm_peak = torch.norm(model.topic_peak_decoder.data, p=1)
+        l2_norm_peak = torch.norm(model.topic_peak_decoder.data, p=2)
+        l1_norm_gene_peak = torch.norm(model.gene_peak_factor_learnt.data, p=1)
+        l2_norm_gene_peak = torch.norm(model.gene_peak_factor_learnt.data, p=2)
+        l1_norm_grn_activator = torch.norm(model.tf_gene_topic_activator_grn.data, p=1)
+        l1_norm_grn_repressor = torch.norm(model.tf_gene_topic_repressor_grn.data, p=1)
 
-            loss_norm = (
-                config_file.l1_penalty_topic_tf * l1_norm_tf
-                + config_file.l2_penalty_topic_tf * l2_norm_tf
-                + config_file.l1_penalty_topic_peak * l1_norm_peak
-                + config_file.l2_penalty_topic_peak * l2_norm_peak
-                + config_file.l1_penalty_gene_peak * l1_norm_gene_peak
-                + config_file.l2_penalty_gene_peak * l2_norm_gene_peak
-                + config_file.l1_penalty_grn_activator * l1_norm_grn_activator
-                + config_file.l1_penalty_grn_repressor * l1_norm_grn_repressor
-            )
+        loss_norm = (
+            config_file.l1_penalty_topic_tf * l1_norm_tf
+            + config_file.l2_penalty_topic_tf * l2_norm_tf
+            + config_file.l1_penalty_topic_peak * l1_norm_peak
+            + config_file.l2_penalty_topic_peak * l2_norm_peak
+            + config_file.l1_penalty_gene_peak * l1_norm_gene_peak
+            + config_file.l2_penalty_gene_peak * l2_norm_gene_peak
+            + config_file.l1_penalty_grn_activator * l1_norm_grn_activator
+            + config_file.l1_penalty_grn_repressor * l1_norm_grn_repressor
+        )
 
-            total_loss = (
-                config_file.weight_atac_grn * loss_atac
-                + config_file.weight_tf_grn * loss_tf
-                + config_file.weight_rna_grn * loss_rna
-                + config_file.weight_rna_from_grn * loss_rna_grn
-                + loss_norm
-            )
+        total_loss = (
+            config_file.weight_atac_grn * loss_atac
+            + config_file.weight_tf_grn * loss_tf
+            + config_file.weight_rna_grn * loss_rna
+            + config_file.weight_rna_from_grn * loss_rna_grn
+            + loss_norm
+        )
 
-            running_loss += total_loss.item()
-            running_loss_atac += loss_atac.item()
-            running_loss_tf += loss_tf.item()
-            running_loss_rna += loss_rna.item()
-            running_loss_rna_grn += loss_rna_grn.item()
-            nbatch += 1
+        running_stats["loss"] += total_loss.item()
+        running_stats["loss_atac"] += loss_atac.item()
+        running_stats["loss_tf"] += loss_tf.item()
+        running_stats["loss_rna"] += loss_rna.item()
+        running_stats["loss_rna_grn"] += loss_rna_grn.item()
+        running_stats["count"] += 1
 
-    eval_loss = running_loss / max(1, nbatch)
-    eval_loss_atac = running_loss_atac / max(1, nbatch)
-    eval_loss_tf = running_loss_tf / max(1, nbatch)
-    eval_loss_rna = running_loss_rna / max(1, nbatch)
-    eval_loss_rna_grn = running_loss_rna_grn / max(1, nbatch)
-
-    return eval_loss, eval_loss_atac, eval_loss_tf, eval_loss_rna, eval_loss_rna_grn
+    nbatch = max(1, running_stats["count"])
+    return (
+        running_stats["loss"] / nbatch
+        running_stats["loss_atac"] / nbatch
+        running_stats["loss_tf"] / nbatch
+        running_stats["loss_rna"] / nbatch
+        running_stats["loss_rna_grn"] / nbatch
+    )
 
 
 def train_model_grn(
@@ -397,12 +394,15 @@ def train_model_grn(
     logger.info("Starting GRN training")
     for epoch in range(config_file.max_grn_epochs):
         model.train()
-        running_loss = 0.0
-        running_loss_atac = 0.0
-        running_loss_tf = 0.0
-        running_loss_rna = 0.0
-        running_loss_rna_grn = 0.0
-        nbatch = 0
+        # Initialize running stats dictionary
+        running_stats = {
+            "loss": 0.0,
+            "loss_atac": 0.0,
+            "loss_tf": 0.0,
+            "loss_rna": 0.0,
+            "loss_rna_grn": 0.0,
+            "count": 0,
+        }
 
         # If the encoder is being updated, recalc topic_tf_input each epoch:
         if config_file.update_encoder_in_grn:
@@ -428,10 +428,8 @@ def train_model_grn(
             )
             rna_input = input_matrix[:, : model.num_genes]
             atac_input = input_matrix[:, model.num_genes :]
-            tf_input = tf_exp
             log_lib_rna = library_size_value[:, 0].reshape(-1, 1)
             log_lib_atac = library_size_value[:, 1].reshape(-1, 1)
-            batch_onehot = input_batch
 
             if config_file.tf_expression_mode == "latent":
                 topic_tf_input = get_tf_expression(
@@ -450,18 +448,17 @@ def train_model_grn(
             out = model(
                 rna_input,
                 atac_input,
-                tf_input,
+                tf_exp,
                 topic_tf_input,
                 log_lib_rna,
                 log_lib_atac,
                 num_cells_value,
-                batch_onehot,
+                input_batch,
                 phase="grn",
             )
             preds_atac = out["preds_atac"]
             mu_nb_tf = out["mu_nb_tf"]
             mu_nb_rna = out["mu_nb_rna"]
-            preds_rna_grn = out["preds_rna_from_grn"]
             mu_nb_rna_grn = out["mu_nb_rna_grn"]
 
             criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction="sum")
@@ -470,7 +467,7 @@ def train_model_grn(
             loss_atac = criterion_poisson(preds_poisson, atac_input)
 
             alpha_tf = torch.nn.functional.softplus(model.tf_alpha_nb).repeat(B, 1)
-            nb_tf_ll = log_nb_positive(tf_input, mu_nb_tf, alpha_tf).sum(dim=1).mean()
+            nb_tf_ll = log_nb_positive(tf_exp, mu_nb_tf, alpha_tf).sum(dim=1).mean()
             loss_tf = -nb_tf_ll
 
             alpha_rna = torch.nn.functional.softplus(model.rna_alpha_nb).repeat(B, 1)
@@ -512,21 +509,23 @@ def train_model_grn(
             total_loss.backward()
             optimizer_grn.step()
 
-            running_loss += total_loss.item()
-            running_loss_atac += loss_atac.item()
-            running_loss_tf += loss_tf.item()
-            running_loss_rna += loss_rna.item()
-            running_loss_rna_grn += loss_rna_grn.item()
-            nbatch += 1
+            # Update running stats
+            running_stats["loss"] += total_loss.item()
+            running_stats["loss_atac"] += loss_atac.item()
+            running_stats["loss_tf"] += loss_tf.item()
+            running_stats["loss_rna"] += loss_rna.item()
+            running_stats["loss_rna_grn"] += loss_rna_grn.item()
+            running_stats["count"] += 1
 
             model.gene_peak_factor_learnt.data.clamp_(min=0)
             model.gene_peak_factor_learnt.data.clamp_(max=1)
 
-        epoch_loss = running_loss / max(1, nbatch)
-        epoch_loss_atac = running_loss_atac / max(1, nbatch)
-        epoch_loss_tf = running_loss_tf / max(1, nbatch)
-        epoch_loss_rna = running_loss_rna / max(1, nbatch)
-        epoch_loss_rna_grn = running_loss_rna_grn / max(1, nbatch)
+        nbatch = max(1, running_stats["count"])
+        epoch_loss = running_stats["loss"] / nbatch
+        epoch_loss_atac = running_stats["loss_atac"] / nbatch
+        epoch_loss_tf = running_stats["loss_tf"] / nbatch
+        epoch_loss_rna = running_stats["loss_rna"] / nbatch
+        epoch_loss_rna_grn = running_stats["loss_rna_grn"] / nbatch
 
         logger.info(
             f"[GRN-Train] Epoch={epoch}, Loss={epoch_loss:.4f},"
