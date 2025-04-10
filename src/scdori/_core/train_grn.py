@@ -129,7 +129,7 @@ def get_tf_expression(
     torch.Tensor
         A (num_topics x num_tfs) tensor of TF expression values for each topic.
     """
-    if tf_expression_mode == "True":
+    if tf_expression_mode == "True":  # FIXME
         latent_all_torch = get_latent_topics(
             model, device, train_loader, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
         )
@@ -146,23 +146,21 @@ def get_tf_expression(
         topic_tf = np.array([rna_tf_vals[top_k_indices[:, t], :].mean(axis=0) for t in range(model.num_topics)])
         topic_tf = torch.from_numpy(topic_tf)
 
-        preds_tf_denoised_min, _ = torch.min(topic_tf, dim=1, keepdim=True)
-        preds_tf_denoised_max, _ = torch.max(topic_tf, dim=1, keepdim=True)
-        topic_tf = (topic_tf - preds_tf_denoised_min) / (preds_tf_denoised_max - preds_tf_denoised_min + 1e-9)
-        topic_tf[topic_tf < config_file.tf_expression_clamp] = 0
-        topic_tf = topic_tf.to(device)
-        return topic_tf
+        preds_tf_denoised_min = topic_tf.min(dim=1, keepdim=True)[0]
+        preds_tf_denoised_max = topic_tf.max(dim=1, keepdim=True)[0]
+        normalized_tf = (topic_tf - preds_tf_denoised_min) / (preds_tf_denoised_max - preds_tf_denoised_min + 1e-9)
+        topic_tf = normalized_tf.clamp(min=config_file.tf_expression_clamp)
+        return topic_tf.to(device)
     else:
-        import torch.nn as nn  # Ensure this import is available if using nn.Softmax
+        import torch.nn as nn  # Ensure this import is available if using nn.Softmax  # FIXME
 
         topic_tf = nn.Softmax(dim=1)(model.decoder.topic_tf_decoder.detach().cpu())
 
-        preds_tf_denoised_min, _ = torch.min(topic_tf, dim=1, keepdim=True)
-        preds_tf_denoised_max, _ = torch.max(topic_tf, dim=1, keepdim=True)
+        preds_tf_denoised_min = topic_tf.min(dim=1, keepdim=True)[0]
+        preds_tf_denoised_max = topic_tf.max(dim=1, keepdim=True)[0]
         tf_normalised = (topic_tf - preds_tf_denoised_min) / (preds_tf_denoised_max - preds_tf_denoised_min + 1e-9)
-        tf_normalised[tf_normalised < config_file.tf_expression_clamp] = 0
-        topic_tf = tf_normalised.to(device)
-        return topic_tf
+        tf_normalised = tf_normalised.clamp(min=config_file.tf_expression_clamp)
+        return tf_normalised.to(device)
 
 
 def compute_eval_loss_grn(
