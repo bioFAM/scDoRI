@@ -20,7 +20,7 @@ sys.path.insert(0, str(HERE / "extensions"))
 #       If this is the case, reinstall it to refresh the metadata
 info = metadata("scDoRI")
 project_name = info["Name"]
-author = info["Author"]
+author = info["Author-email"]
 copyright = f"{datetime.now():%Y}, {author}."
 version = info["Version"]
 urls = dict(pu.split(", ") for pu in info.get_all("Project-URL"))
@@ -71,7 +71,7 @@ napoleon_include_init_with_doc = False
 napoleon_use_rtype = True  # having a separate entry generally helps readability
 napoleon_use_param = True
 myst_heading_anchors = 6  # create anchors for h1-h6
-myst_enable_extensions = ["amsmath", "colon_fence", "deflist", "dollarmath", "html_image", "html_admonition"]
+myst_enable_extensions = ["amsmath", "colon_fence", "deflist", "dollarmath", "amsmath", "html_image", "html_admonition"]
 myst_url_schemes = ("http", "https", "mailto")
 nb_output_stderr = "remove"
 nb_execution_mode = "off"
@@ -85,6 +85,7 @@ intersphinx_mapping = {
     "anndata": ("https://anndata.readthedocs.io/en/stable/", None),
     "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
+    "pytorch": ("https://pytorch.org/docs/stable/", None),
 }
 
 # List of patterns, relative to source directory, that match files and
