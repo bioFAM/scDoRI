@@ -16,8 +16,7 @@ def compute_in_silico_chipseq(
     n_bg: int = 10000,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Compute correlation-based in-silico ChIP-seq embeddings, separating activator
-    and repressor signals.
+    Compute correlation-based in-silico ChIP-seq embeddings, separating activator and repressor signals.
 
     Steps
     -----
