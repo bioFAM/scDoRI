@@ -1,13 +1,11 @@
-# filtering.py
-import anndata as ad
 import logging
+
+import anndata as ad
 
 logger = logging.getLogger(__name__)
 
-def intersect_cells(
-    data_rna: ad.AnnData,
-    data_atac: ad.AnnData
-) -> tuple[ad.AnnData, ad.AnnData]:
+
+def intersect_cells(data_rna: ad.AnnData, data_atac: ad.AnnData) -> tuple[ad.AnnData, ad.AnnData]:
     """
     Keep only the cells that are present in both RNA and ATAC datasets.
 
@@ -35,10 +33,8 @@ def intersect_cells(
     logger.info(f"Intersected cells: now RNA={data_rna_sub.shape}, ATAC={data_atac_sub.shape}")
     return data_rna_sub, data_atac_sub
 
-def remove_mitochondrial_genes(
-    data_rna: ad.AnnData,
-    mito_prefix: str = "mt-"
-) -> ad.AnnData:
+
+def remove_mitochondrial_genes(data_rna: ad.AnnData, mito_prefix: str = "mt-") -> ad.AnnData:
     """
     Remove mitochondrial genes from the RNA data based on a gene name prefix.
 

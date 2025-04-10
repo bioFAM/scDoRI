@@ -1,9 +1,11 @@
-import scanpy as sc
-import anndata as ad
-from pathlib import Path
 import logging
+from pathlib import Path
+
+import anndata as ad
+import scanpy as sc
 
 logger = logging.getLogger(__name__)
+
 
 def create_dir_if_not_exists(directory: Path) -> None:
     """
@@ -24,11 +26,8 @@ def create_dir_if_not_exists(directory: Path) -> None:
         logger.info(f"Creating directory: {directory}")
         directory.mkdir(parents=True, exist_ok=True)
 
-def load_anndata(
-    data_dir: Path,
-    rna_file: str,
-    atac_file: str
-) -> tuple[ad.AnnData, ad.AnnData]:
+
+def load_anndata(data_dir: Path, rna_file: str, atac_file: str) -> tuple[ad.AnnData, ad.AnnData]:
     """
     Load RNA and ATAC data from disk into AnnData objects.
 
@@ -62,11 +61,8 @@ def load_anndata(
     data_atac = sc.read_h5ad(atac_path)
     return data_rna, data_atac
 
-def save_processed_datasets(
-    data_rna: ad.AnnData,
-    data_atac: ad.AnnData,
-    out_dir: Path
-) -> None:
+
+def save_processed_datasets(data_rna: ad.AnnData, data_atac: ad.AnnData, out_dir: Path) -> None:
     """
     Save processed RNA and ATAC AnnData objects with matching cell order.
 

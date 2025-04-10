@@ -229,7 +229,7 @@ class TrainConfig:
     umap_random_state: int = 42
 
     # SIGNIFICANCE SETTINGS
-    significance_cutoffs: list[float] = [0.001, 0.005, 0.01, 0.05]
+    significance_cutoffs = [0.001, 0.005, 0.01, 0.05]
     num_permutations: int = 1000
 
 

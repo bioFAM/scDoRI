@@ -1,9 +1,11 @@
+import logging
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class scDoRI(nn.Module):
     """
@@ -96,7 +98,7 @@ class scDoRI(nn.Module):
         num_batches,
         dim_encoder1,
         dim_encoder2,
-        batch_norm=True
+        batch_norm=True,
     ):
         super(scDoRI, self).__init__()
         self.device = device
@@ -117,7 +119,7 @@ class scDoRI(nn.Module):
             nn.Dropout(0.05),
             nn.Linear(dim_encoder1, dim_encoder2),
             nn.BatchNorm1d(dim_encoder2) if batch_norm else nn.Identity(),
-            nn.ReLU()
+            nn.ReLU(),
         )
         # ENCODER for ATAC
         self.encoder_atac = nn.Sequential(
@@ -127,7 +129,7 @@ class scDoRI(nn.Module):
             nn.Dropout(0.05),
             nn.Linear(dim_encoder1, dim_encoder2),
             nn.BatchNorm1d(dim_encoder2) if batch_norm else nn.Identity(),
-            nn.ReLU()
+            nn.ReLU(),
         )
         self.mu_theta = nn.Linear(dim_encoder2 * 2, num_topics)
 
@@ -135,7 +137,7 @@ class scDoRI(nn.Module):
         self.topic_peak_decoder = nn.Parameter(torch.rand(num_topics, num_peaks))
         self.atac_batch_factor = nn.Parameter(torch.rand(num_batches, num_peaks))
         self.atac_batch_norm = nn.BatchNorm1d(num_peaks)
-        
+
         # RNA from ATAC (module 2)
         self.gene_peak_factor_learnt = nn.Parameter(torch.rand(num_genes, num_peaks))
         self.gene_peak_factor_fixed = nn.Parameter(torch.ones(num_genes, num_peaks))
@@ -149,8 +151,6 @@ class scDoRI(nn.Module):
         self.tf_batch_norm = nn.BatchNorm1d(num_tfs)
         self.tf_alpha_nb = nn.Parameter(torch.rand(1, num_tfs))
 
-        
-
         # MLP for library factor (TF, RNA)
         self.tf_library_factor = nn.Sequential(
             nn.Linear(num_tfs, dim_encoder2),
@@ -161,7 +161,7 @@ class scDoRI(nn.Module):
             nn.BatchNorm1d(dim_encoder1) if batch_norm else nn.Identity(),
             nn.ReLU(),
             nn.Linear(dim_encoder1, 1),
-            nn.Softplus()
+            nn.Softplus(),
         )
         self.rna_library_factor = nn.Sequential(
             nn.Linear(num_genes, dim_encoder2),
@@ -172,7 +172,7 @@ class scDoRI(nn.Module):
             nn.BatchNorm1d(dim_encoder1) if batch_norm else nn.Identity(),
             nn.ReLU(),
             nn.Linear(dim_encoder1, 1),
-            nn.Softplus()
+            nn.Softplus(),
         )
 
         # GRN portion (module 4)
@@ -228,10 +228,10 @@ class scDoRI(nn.Module):
         log_lib_atac,
         num_cells,
         batch_onehot,
-        phase="warmup_1"
+        phase="warmup_1",
     ):
         """
-        Forward pass through scDoRI, producing predictions for ATAC, TF, and RNA 
+        Forward pass through scDoRI, producing predictions for ATAC, TF, and RNA
         reconstructions (Phase 1), as well as GRN-based RNA predictions in GRN phase (Phase 2).
 
         Parameters
@@ -254,7 +254,7 @@ class scDoRI(nn.Module):
         batch_onehot : torch.Tensor
             Shape (B, num_batches). One-hot batch encoding for each cell.
         phase : str, optional
-            Which training phase: "warmup_1", "warmup_2", or "grn". 
+            Which training phase: "warmup_1", "warmup_2", or "grn".
             If phase=="grn", the GRN-based RNA predictions are included.
 
         Returns
@@ -318,7 +318,7 @@ class scDoRI(nn.Module):
 
             # Calculate ATAC-based TF–gene links (activator/repressor) for each topic
             for topic in range(self.num_topics):
-                topic_gene_peak = (topic_peak_denoised1[topic][:, None] * gene_peak)
+                topic_gene_peak = topic_peak_denoised1[topic][:, None] * gene_peak
                 G_topic = self.tf_binding_matrix_activator.T @ topic_gene_peak
                 G_topic = G_topic / (gene_peak.sum(axis=0, keepdims=True) + 1e-7)
                 grn_atac_activator[topic] = G_topic
@@ -335,7 +335,9 @@ class scDoRI(nn.Module):
                 gene_atac_repressor_topic = grn_atac_repressor[topic] / (grn_atac_repressor[topic].min() + 1e-15)
 
                 G_act = gene_atac_activator_topic * torch.nn.functional.relu(self.tf_gene_topic_activator_grn[topic])
-                G_rep = gene_atac_repressor_topic * -1 * torch.nn.functional.relu(self.tf_gene_topic_repressor_grn[topic])
+                G_rep = (
+                    gene_atac_repressor_topic * -1 * torch.nn.functional.relu(self.tf_gene_topic_repressor_grn[topic])
+                )
 
                 C[topic] = tf_expression_input[topic] @ G_act + tf_expression_input[topic] @ G_rep
 
@@ -360,8 +362,9 @@ class scDoRI(nn.Module):
             "preds_rna_from_grn": preds_rna_from_grn,
             "mu_nb_rna_grn": mu_nb_rna_grn,
             "library_factor_tf": library_factor_tf,
-            "library_factor_rna": library_factor_rna
+            "library_factor_rna": library_factor_rna,
         }
+
 
 def initialize_scdori_parameters(
     model,
@@ -369,7 +372,7 @@ def initialize_scdori_parameters(
     gene_peak_fixed: torch.Tensor,
     insilico_act: torch.Tensor,
     insilico_rep: torch.Tensor,
-    phase="warmup"
+    phase="warmup",
 ):
     """
     Initialize or freeze certain scDoRI parameters, preparing for either warmup or GRN phases.

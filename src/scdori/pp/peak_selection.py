@@ -1,14 +1,14 @@
-import numpy as np
-import anndata as ad
 import logging
+
+import anndata as ad
+import numpy as np
 import scipy.sparse as sp
 
 logger = logging.getLogger(__name__)
 
+
 def select_highly_variable_peaks_by_std(
-    data_atac: ad.AnnData,
-    n_top_peaks: int,
-    cluster_key: str = "leiden"
+    data_atac: ad.AnnData, n_top_peaks: int, cluster_key: str = "leiden"
 ) -> ad.AnnData:
     """
     Select highly variable peaks based on the standard deviation of peak accessibility
@@ -75,11 +75,9 @@ def select_highly_variable_peaks_by_std(
         logger.info("n_top_peaks >= total peaks; no filtering applied.")
         return data_atac
 
+
 def keep_promoters_and_select_hv_peaks(
-    data_atac: ad.AnnData,
-    total_n_peaks: int,
-    cluster_key: str = "leiden",
-    promoter_col: str = "is_promoter"
+    data_atac: ad.AnnData, total_n_peaks: int, cluster_key: str = "leiden", promoter_col: str = "is_promoter"
 ) -> ad.AnnData:
     """
     Retain all promoter peaks and then select highly variable (HV) peaks among non-promoters.

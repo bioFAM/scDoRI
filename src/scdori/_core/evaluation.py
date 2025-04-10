@@ -1,20 +1,12 @@
-#################################
-# evaluation.py
-#################################
-import torch
 import numpy as np
+import torch
 from tqdm import tqdm
+
 from .dataloader import create_minibatch
 
+
 def get_latent_topics(
-    model,
-    device,
-    data_loader,
-    rna_anndata,
-    atac_anndata,
-    num_cells,
-    tf_indices,
-    encoding_batch_onehot
+    model, device, data_loader, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
 ):
     """
     Extract the softmaxed topic activations (theta) for each cell in the dataset.
@@ -52,20 +44,13 @@ def get_latent_topics(
             cell_indices = batch_data[0].to(device)
             B = cell_indices.shape[0]
 
-            (input_matrix, tf_exp, library_size_value, num_cells_value,
-             input_batch) = create_minibatch(
-                 device,
-                 cell_indices,
-                 rna_anndata,
-                 atac_anndata,
-                 num_cells,
-                 tf_indices,
-                 encoding_batch_onehot
-             )
+            (input_matrix, tf_exp, library_size_value, num_cells_value, input_batch) = create_minibatch(
+                device, cell_indices, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
+            )
 
             # Split into rna_input, atac_input, tf_input
-            rna_input = input_matrix[:, :model.num_genes]
-            atac_input = input_matrix[:, model.num_genes:]
+            rna_input = input_matrix[:, : model.num_genes]
+            atac_input = input_matrix[:, model.num_genes :]
             tf_input = tf_exp
 
             log_lib_rna = library_size_value[:, 0].reshape(-1, 1)
@@ -82,7 +67,7 @@ def get_latent_topics(
                 log_lib_atac,
                 num_cells_value,
                 batch_onehot,
-                phase="warmup_1"
+                phase="warmup_1",
             )
 
             # out["theta"] contains the softmaxed topic distribution

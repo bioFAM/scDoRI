@@ -1,13 +1,13 @@
-import numpy as np
-import scanpy as sc
-#import muon as mu
-import pandas as pd
 import logging
 from pathlib import Path
-from gtfparse import read_gtf
+
 import anndata as ad
+import pandas as pd
+import scanpy as sc
+from gtfparse import read_gtf
 
 logger = logging.getLogger(__name__)
+
 
 def load_gtf(gtf_path: Path) -> pd.DataFrame:
     """
@@ -30,10 +30,8 @@ def load_gtf(gtf_path: Path) -> pd.DataFrame:
     gene_coordinates.columns = df.columns
     return gene_coordinates
 
-def filter_protein_coding_genes(
-    data_rna: ad.AnnData,
-    gtf_df: pd.DataFrame
-) -> ad.AnnData:
+
+def filter_protein_coding_genes(data_rna: ad.AnnData, gtf_df: pd.DataFrame) -> ad.AnnData:
     """
     Retain only protein-coding genes in the RNA AnnData object based on GTF annotations.
 
@@ -58,6 +56,7 @@ def filter_protein_coding_genes(
     logger.info(f"Filtered to protein-coding genes: {data_rna_sub.shape[1]} genes left.")
     return data_rna_sub
 
+
 def compute_hvgs_and_tfs(
     data_rna: ad.AnnData,
     tf_names: list[str],
@@ -65,7 +64,7 @@ def compute_hvgs_and_tfs(
     user_tfs: list[str] = None,
     num_genes: int = 3000,
     num_tfs: int = 300,
-    min_cells: int = 20
+    min_cells: int = 20,
 ) -> tuple[ad.AnnData, list[str], list[str]]:
     """
     Compute sets of Highly Variable Genes (HVGs) and TFs (transcription factors)
@@ -112,7 +111,7 @@ def compute_hvgs_and_tfs(
     - HVG selection is done by `scanpy.pp.highly_variable_genes`, using normalized/log1p data.
     - User-provided genes and TFs are included by default, removing them from the
       HVG candidate pool if they were already selected.
-    - TFs are not re-labeled or otherwise changed beyond this classification. 
+    - TFs are not re-labeled or otherwise changed beyond this classification.
     - The column `data_rna_processed.var["gene_type"]` is set to "HVG" or "TF" for each gene.
     """
     if user_genes is None:
@@ -124,11 +123,7 @@ def compute_hvgs_and_tfs(
 
     # 1) Validate user-specified lists
     valid_genes_user = list(set(data_rna.var_names).intersection(user_genes))
-    valid_tfs_user = list(
-        set(data_rna.var_names)
-        .intersection(user_tfs)
-        .intersection(tf_names)
-    )
+    valid_tfs_user = list(set(data_rna.var_names).intersection(user_tfs).intersection(tf_names))
 
     num_tfs_hvg = max(0, num_tfs - len(valid_tfs_user))
     num_genes_hvg = max(0, num_genes - len(valid_genes_user) - num_tfs)

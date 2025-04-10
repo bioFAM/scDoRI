@@ -1,20 +1,9 @@
-import torch
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
 import numpy as np
-import anndata as ad
-import scanpy
 import scipy.sparse as sp
+import torch
 
-def create_minibatch(
-    device,
-    index_matrix,
-    rna_anndata,
-    atac_anndata,
-    num_cells,
-    tf_indices,
-    encoding_batch_onehot
-):
+
+def create_minibatch(device, index_matrix, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot):
     """
     Create a minibatch of required input tensors using integer indices of cells.
 
@@ -41,7 +30,7 @@ def create_minibatch(
     tuple
         A tuple containing:
         - input_matrix (torch.Tensor): Concatenated RNA and ATAC input of shape (B, g + p),
-          where B is batch size, g is the number of genes, p is the number of peaks. 
+          where B is batch size, g is the number of genes, p is the number of peaks.
           Values are floats on the given device.
         - tf_exp (torch.Tensor): RNA expression values for TFs, shape (B, num_tfs).
         - library_size_value (torch.Tensor): Log-scale library sizes for RNA and ATAC, shape (B, 2).
@@ -53,10 +42,9 @@ def create_minibatch(
     - This function converts sparse arrays to dense if necessary.
     - ATAC counts are converted from insertion counts to fragment counts by using (x + 1) // 2.
     """
-    
     index_train = index_matrix.clone().detach().cpu().numpy()
-    atac_input  = atac_anndata[index_train,:].X
-    rna_input   = rna_anndata[index_train,:].X
+    atac_input = atac_anndata[index_train, :].X
+    rna_input = rna_anndata[index_train, :].X
 
     if sp.issparse(atac_input):
         atac_input = atac_input.toarray()
@@ -65,30 +53,20 @@ def create_minibatch(
 
     # Convert ATAC insertions to fragment counts
     atac_input = (np.array(atac_input) + 1) // 2
-    rna_input  = np.array(rna_input)
+    rna_input = np.array(rna_input)
 
     library_size_atac = atac_input.sum(axis=1).reshape(-1, 1) + 1e-8
-    library_size_rna  = rna_input.sum(axis=1).reshape(-1, 1) + 1e-8
-    library_size      = np.concatenate(
-        (np.log(library_size_rna), np.log(library_size_atac)), axis=1
-    )
+    library_size_rna = rna_input.sum(axis=1).reshape(-1, 1) + 1e-8
+    library_size = np.concatenate((np.log(library_size_rna), np.log(library_size_atac)), axis=1)
 
-    input_data   = np.concatenate((rna_input, atac_input), axis=1)
+    input_data = np.concatenate((rna_input, atac_input), axis=1)
     input_matrix = torch.from_numpy(input_data).to(device, dtype=torch.float)
 
-    input_batch = torch.from_numpy(
-        encoding_batch_onehot[index_train, :]
-    ).to(device, dtype=torch.float)
+    input_batch = torch.from_numpy(encoding_batch_onehot[index_train, :]).to(device, dtype=torch.float)
 
     tf_exp = torch.from_numpy(rna_input[:, tf_indices]).to(device, dtype=torch.float)
 
     library_size_value = torch.from_numpy(library_size).to(device, dtype=torch.float)
-    num_cells_value    = torch.from_numpy(num_cells[index_train, :]).to(device, dtype=torch.float)
+    num_cells_value = torch.from_numpy(num_cells[index_train, :]).to(device, dtype=torch.float)
 
-    return (
-        input_matrix,
-        tf_exp,
-        library_size_value,
-        num_cells_value,
-        input_batch
-    )
+    return (input_matrix, tf_exp, library_size_value, num_cells_value, input_batch)

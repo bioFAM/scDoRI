@@ -1,10 +1,12 @@
-import scanpy as sc
-import torch
-import numpy as np
 import logging
 from pathlib import Path
 
+import numpy as np
+import scanpy as sc
+import torch
+
 logger = logging.getLogger(__name__)
+
 
 def load_scdori_inputs(config_file):
     """
