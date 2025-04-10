@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "hatchling.build"
-requires = [ "hatchling" ]
+requires = [ "hatch-vcs", "hatchling" ]
 
 [project]
 name = "scDoRI"
@@ -12,7 +12,7 @@ maintainers = [
   { name = "Manu Saraswat", email = "manu.saraswat10@gmail.com" },
 ]
 authors = [
-  { name = "Manu Saraswat" },
+  { name = "Manu Saraswat", email = "manu.saraswat10@gmail.com"  },
 ]
 requires-python = ">=3.10"
 classifiers = [
@@ -52,9 +52,19 @@ optional-dependencies.test = [
   "pytest",
 ]
 # https://docs.pypi.org/project_metadata/#project-urls
-urls.Documentation = "https://scDoRI.readthedocs.io/"
-urls.Homepage = "https://github.com/bioFAM/scDoRI"
-urls.Source = "https://github.com/bioFAM/scDoRI"
+urls.Documentation = "https://scdori.readthedocs.io/"
+urls.Homepage = "https://github.com/bioFAM/scdori"
+urls.Source = "https://github.com/bioFAM/scdori"
+
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/scdori/_version.py"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.envs.default]
 installer = "uv"
@@ -74,6 +84,8 @@ line-length = 120
 src = [ "src" ]
 extend-include = [ "*.ipynb" ]
 
+format.skip-magic-trailing-comma = true
+format.exclude = [ "*.ipynb" ]
 format.docstring-code-format = true
 
 lint.select = [
@@ -106,6 +118,8 @@ lint.ignore = [
 ]
 lint.per-file-ignores."*/__init__.py" = [ "F401" ]
 lint.per-file-ignores."docs/*" = [ "I" ]
+lint.per-file-ignores."docs/extensions/*" = [ "D" ]
+lint.per-file-ignores."docs/notebooks/*" = [ "D", "F403", "F405" ]
 lint.per-file-ignores."tests/*" = [ "D" ]
 lint.pydocstyle.convention = "numpy"
 
