@@ -135,9 +135,11 @@ def get_tf_expression(
         )
         top_k_indices = np.argsort(latent_all_torch, axis=0)[-config_file.cells_per_topic :]
         rna_tf_vals = rna_anndata.X[:, tf_indices]
+
         if sp.issparse(rna_tf_vals):
-            rna_tf_vals = rna_tf_vals.todense()
-        rna_tf_vals = np.array(rna_tf_vals)
+            rna_tf_vals = rna_tf_vals.toarray()
+        else:
+            rna_tf_vals = np.asarray(rna_tf_vals)
 
         median_cell = np.median(rna_tf_vals.sum(axis=1))
         rna_tf_vals = median_cell * (rna_tf_vals / rna_tf_vals.sum(axis=1, keepdims=True))
