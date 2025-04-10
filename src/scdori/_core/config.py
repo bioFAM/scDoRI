@@ -1,30 +1,23 @@
-#################################
-# config.py
-#################################
-"""
-Global configuration for the scDoRI modeling pipeline.
-
-This file defines top-level constants and parameters controlling:
-
-1. Logging
-2. File paths for data and outputs
-3. Model architecture details (numbers of topics, hidden dimensions)
-4. Training phases and hyperparameters
-5. Loss weighting for different data modalities (ATAC, TF, RNA)
-6. Regularization and early stopping settings
-7. Significance testing cutoffs for TF-gene links
-8. UMAP parameters for visualization
-"""
-
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 
 @dataclass
 class TrainConfig:
     """
-    Configuration settings for scDoRI modeling pipeline.
+    Global configuration for the scDoRI modeling pipeline.
+
+    This file defines top-level constants and parameters controlling:
+
+    1. Logging
+    2. File paths for data and outputs
+    3. Model architecture details (numbers of topics, hidden dimensions)
+    4. Training phases and hyperparameters
+    5. Loss weighting for different data modalities (ATAC, TF, RNA)
+    6. Regularization and early stopping settings
+    7. Significance testing cutoffs for TF-gene links
+    8. UMAP parameters for visualization
 
     Attributes
     ----------
@@ -225,10 +218,10 @@ class TrainConfig:
     cells_per_topic: int = 200
 
     # SAVE FOLDERS
-    weights_folder_scdori: str = "weights_directory_scdori"
-    weights_folder_grn: str = "weights_directory_grn"
-    best_scdori_model_path: str = "best_scdori_final.pth"
-    best_grn_model_path: str = "best_grn.pth"
+    weights_folder_scdori: str = "/data/m015k/weights/weights_directory_scdori"
+    weights_folder_grn: str = "/data/m015k/weights/weights_directory_grn"
+    best_scdori_model_path: str = "/data/m015k/models/best_scdori_final.pth"
+    best_grn_model_path: str = "/data/m015k/models/best_grn.pth"
 
     # UMAP PARAMETERS
     umap_n_neighbors: int = 15
@@ -236,7 +229,7 @@ class TrainConfig:
     umap_random_state: int = 42
 
     # SIGNIFICANCE SETTINGS
-    significance_cutoffs: list[float] = field(default_factory=lambda: [0.001, 0.005, 0.01, 0.05])
+    significance_cutoffs: list[float] = [0.001, 0.005, 0.01, 0.05]
     num_permutations: int = 1000
 
 
