@@ -29,6 +29,9 @@ git clone https://github.com/saraswatmanu/scDoRI.git
 cd scDoRI
 conda env create -f environment.yml
 conda activate scdori_env
+
+# Install the scDoRI package
+pip install .
 ```
 > ⚡ **Note**: The training process is GPU-accelerated and **highly recommended** to be run on a GPU-enabled machine.  
 > While preprocessing can run on CPU, training large datasets on CPU is not advised due to slow performance.
@@ -39,23 +42,23 @@ You’ll work through two notebooks, using two separate config files to set para
 ### 🧹 Step 1: Preprocessing
 #### Edit paths and parameters in:
 ```bash
-preprocessing_pipeline/config.py
+src/scdori/pp/config.py
 ```
 to specify location of RNA and ATAC anndata .h5ad files, motif file, and set number of peaks/genes/TFs to train on. 
 #### Run preprocessing notebook
 ```bash
-notebooks/preprocessing.ipynb
+docs/notebooks/preprocessing.ipynb
 ```
 ### 🧠 Step 2: Training and Downstream analysis
 
 #### Edit paths and parameters in:
 ```bash
-scdori/config.py
+src/scdori/_core/config.py
 ```
 for scDoRI hyperparameters (number of topics, learning rate, epochs etc.) and specify path for preprocessed anndata objects and insilico-chipseq files
 #### Run training and downstream analysis notebook
 ```bash
-notebooks/training.ipynb
+docs/notebooks/training.ipynb
 ```
 ## 🧪 Dataset Demonstration
 
