@@ -165,11 +165,11 @@ class TrainConfig:
     batch_size_cell_prediction: int = 512
 
     # PHASE1
-    epoch_warmup_1: int = 1
-    max_scdori_epochs: int = 1
+    epoch_warmup_1: int = 5
+    max_scdori_epochs: int = 1000
 
     # PHASE 2
-    max_grn_epochs: int = 1
+    max_grn_epochs: int = 1000
     update_encoder_in_grn: bool = False
     update_peak_gene_in_grn: bool = False
     update_topic_peak_in_grn: bool = False
