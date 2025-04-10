@@ -1,4 +1,4 @@
-from . import config
+from .config import trainConfig
 from .data_io import load_scdori_inputs, save_model_weights
 from .downstream import load_best_model
 from .models import initialize_scdori_parameters, scDoRI
