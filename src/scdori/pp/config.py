@@ -1,4 +1,5 @@
 import logging
+
 import numpy as np
 
 """
@@ -83,10 +84,10 @@ peak_distance_min_cutoff : float
 logging_level = logging.INFO
 
 # Directory structure
-data_dir = "/data/saraswat/new_metacells/data_gastrulation_single_cell"
-genome_dir = "/data/saraswat/new_metacells/mouse_genome_files"
-motif_directory = "/data/saraswat/new_metacells/motif_database"
-output_subdir_name = "generated"
+data_dir = "/data/m015k/new_metacells/data_gastrulation_single_cell"
+genome_dir = "/data/m015k/new_metacells/mouse_genome_files"
+motif_directory = "/home/m015k/code/scDoRI/assets/motif_database"
+output_subdir_name = "generated_data"
 
 # Input Filenames
 rna_adata_file_name = "anndata.h5ad"

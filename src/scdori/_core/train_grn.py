@@ -5,11 +5,11 @@ from tqdm import tqdm
 import scipy.sparse as sp
 import numpy as np
 #from scdori import config
-from scdori.utils import log_nb_positive
-from scdori.dataloader import create_minibatch
-from scdori.evaluation import get_latent_topics
+from .utils import log_nb_positive
+from .dataloader import create_minibatch
+from .evaluation import get_latent_topics
 from pathlib import Path
-from scdori.data_io import save_model_weights
+from .data_io import save_model_weights
 
 logger = logging.getLogger(__name__)
 

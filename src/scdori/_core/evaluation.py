@@ -4,7 +4,7 @@
 import torch
 import numpy as np
 from tqdm import tqdm
-from scdori.dataloader import create_minibatch
+from .dataloader import create_minibatch
 
 def get_latent_topics(
     model,

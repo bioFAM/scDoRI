@@ -14,8 +14,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import scipy
-from scdori import config
-from scdori.utils import set_seed, log_nb_positive
+from . import config
+from .utils import set_seed, log_nb_positive
 
 logger = logging.getLogger(__name__)
 

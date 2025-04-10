@@ -9,7 +9,7 @@ This file defines top-level constants and parameters controlling:
 1. Logging
 2. File paths for data and outputs
 3. Model architecture details (numbers of topics, hidden dimensions)
-4. Training phases and hyperparameters 
+4. Training phases and hyperparameters
 5. Loss weighting for different data modalities (ATAC, TF, RNA)
 6. Regularization and early stopping settings
 7. Significance testing cutoffs for TF-gene links
@@ -144,7 +144,7 @@ from pathlib import Path
 logging_level = logging.INFO
 
 # DATA PATHS
-data_dir = Path("/data/saraswat/new_metacells/data_gastrulation_single_cell")
+data_dir = Path("/data/m015k/new_metacells/data_gastrulation_single_cell")
 output_subdir = "generated"
 
 rna_metacell_file = "rna_processed.h5ad"
@@ -165,11 +165,11 @@ num_topics = 40
 batch_size_cell_prediction = 512
 
 # PHASE1
-epoch_warmup_1 = 5
-max_scdori_epochs = 1000
+epoch_warmup_1 = 1
+max_scdori_epochs = 1
 
 # PHASE 2
-max_grn_epochs = 1000
+max_grn_epochs = 1
 update_encoder_in_grn = False
 update_peak_gene_in_grn = False
 update_topic_peak_in_grn = False
@@ -186,29 +186,29 @@ learning_rate_grn = 0.001
 
 # Phase 1 weights (warmup_1)
 weight_atac_phase1 = 1.0
-weight_tf_phase1   = 200.0
-weight_rna_phase1  = 0.0
+weight_tf_phase1 = 200.0
+weight_rna_phase1 = 0.0
 weight_rna_grn_phase1 = 0.0
 
 # Phase 1 weights (warmup_2)
 weight_atac_phase2 = 1.0
-weight_tf_phase2   = 200.0
-weight_rna_phase2  = 20.0
+weight_tf_phase2 = 200.0
+weight_rna_phase2 = 20.0
 weight_rna_grn_phase2 = 0.0
 
 # Phase 2 (GRN) weights
 weight_atac_grn = 1.0
-weight_tf_grn   = 200.0
-weight_rna_grn  = 20.0
+weight_tf_grn = 200.0
+weight_rna_grn = 20.0
 weight_rna_from_grn = 20.0
 
 # REGULARIZATION
-l1_penalty_topic_tf     = 0.001
-l2_penalty_topic_tf     = 0.000
-l1_penalty_topic_peak   = 0.001
-l2_penalty_topic_peak   = 0.001
-l1_penalty_gene_peak    = 0.001
-l2_penalty_gene_peak    = 0.005
+l1_penalty_topic_tf = 0.001
+l2_penalty_topic_tf = 0.000
+l1_penalty_topic_peak = 0.001
+l2_penalty_topic_peak = 0.001
+l1_penalty_gene_peak = 0.001
+l2_penalty_gene_peak = 0.005
 l1_penalty_grn_activator = 0.00005
 l1_penalty_grn_repressor = 0.0000
 
@@ -219,15 +219,15 @@ cells_per_topic = 200
 
 # SAVE FOLDERS
 weights_folder_scdori = "weights_directory_scdori"
-weights_folder_grn    = "weights_directory_grn"
+weights_folder_grn = "weights_directory_grn"
 best_scdori_model_path = "best_scdori_final.pth"
-best_grn_model_path    = "best_grn.pth"
+best_grn_model_path = "best_grn.pth"
 
 # UMAP PARAMETERS
-umap_n_neighbors   = 15
-umap_min_dist      = 0.1
-umap_random_state  = 42
+umap_n_neighbors = 15
+umap_min_dist = 0.1
+umap_random_state = 42
 
 # SIGNIFICANCE SETTINGS
 significance_cutoffs = [0.001, 0.005, 0.01, 0.05]
-num_permutations=1000
+num_permutations = 1000

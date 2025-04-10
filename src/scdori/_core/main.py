@@ -7,13 +7,13 @@ import numpy as np
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 
-from scdori import config
-from scdori.data_io import load_scdori_inputs, save_model_weights
-from scdori.utils import set_seed
-from scdori.models import scDoRI
-from scdori.train_scdori import train_scdori_phases
-from scdori.train_grn import train_model_grn
-from scdori.models import initialize_scdori_parameters
+from . import config
+from .data_io import load_scdori_inputs, save_model_weights
+from .utils import set_seed
+from .models import scDoRI
+from .train_scdori import train_scdori_phases
+from .train_grn import train_model_grn
+from .models import initialize_scdori_parameters
 from pathlib import Path
 
 logger = logging.getLogger(__name__)

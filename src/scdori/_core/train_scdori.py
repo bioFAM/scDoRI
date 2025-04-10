@@ -7,9 +7,9 @@ from tqdm import tqdm
 import copy
 from pathlib import Path
 # from scdori import config
-from scdori.utils import log_nb_positive
-from scdori.dataloader import create_minibatch
-from scdori.data_io import save_model_weights
+from .utils import log_nb_positive
+from .dataloader import create_minibatch
+from .data_io import save_model_weights
 
 logger = logging.getLogger(__name__)
 
