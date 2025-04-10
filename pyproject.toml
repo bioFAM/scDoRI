@@ -3,7 +3,7 @@ build-backend = "hatchling.build"
 requires = [ "hatch-vcs", "hatchling" ]
 
 [project]
-name = "scDoRI"
+name = "scdori"
 version = "0.0.1"
 description = "scDoRI (single-cell Deep multi-Omic Regulatory Inference) is a deep learning model to infer enhancer-mediated gene regulatory networks (eGRNs) from single-cell multiome data (RNA + ATAC)."
 readme = "README.md"
@@ -12,7 +12,7 @@ maintainers = [
   { name = "Manu Saraswat", email = "manu.saraswat10@gmail.com" },
 ]
 authors = [
-  { name = "Manu Saraswat", email = "manu.saraswat10@gmail.com"  },
+  { name = "Manu Saraswat", email = "manu.saraswat10@gmail.com" },
 ]
 requires-python = ">=3.10"
 classifiers = [
@@ -49,15 +49,14 @@ optional-dependencies.doc = [
 ]
 optional-dependencies.test = [
   "coverage",
-  "pytest",
   "decoupler",
-  "liana"
+  "liana",
+  "pytest",
 ]
 # https://docs.pypi.org/project_metadata/#project-urls
 urls.Documentation = "https://scdori.readthedocs.io/"
 urls.Homepage = "https://github.com/bioFAM/scdori"
 urls.Source = "https://github.com/bioFAM/scdori"
-
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/scdori/_version.py"
