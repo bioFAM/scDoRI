@@ -50,6 +50,8 @@ optional-dependencies.doc = [
 optional-dependencies.test = [
   "coverage",
   "pytest",
+  "decoupler",
+  "liana"
 ]
 # https://docs.pypi.org/project_metadata/#project-urls
 urls.Documentation = "https://scdori.readthedocs.io/"
