@@ -1,18 +1,16 @@
+import itertools
+import logging
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import itertools
-import logging
-import anndata as ad
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
 def create_extended_gene_bed(
-    gtf_df: pd.DataFrame,
-    final_genes: list[str],
-    window_size: int,
-    chrom_sizes_path: Path = None
+    gtf_df: pd.DataFrame, final_genes: list[str], window_size: int, chrom_sizes_path: Path = None
 ) -> pd.DataFrame:
     """
     Create an extended gene BED-like DataFrame by adding a window around each gene.
@@ -58,7 +56,7 @@ def create_extended_gene_bed(
     chrom_dict = {}
     if chrom_sizes_path is not None and chrom_sizes_path.exists():
         chrom_sizes = pd.read_csv(chrom_sizes_path, sep="\t", header=None, names=["chrom", "size"])
-        chrom_dict = dict(zip(chrom_sizes["chrom"], chrom_sizes["size"]))
+        chrom_dict = dict(zip(chrom_sizes["chrom"], chrom_sizes["size"], strict=False))
 
     extended_rows = []
     for gene in gtf_gene.index:
@@ -77,21 +75,14 @@ def create_extended_gene_bed(
                 end_extended = chr_len
             # start_extended already clamped to 0 above
 
-        extended_rows.append([
-            chr_,
-            start_extended,
-            end_extended,
-            gene,
-            strand_
-        ])
+        extended_rows.append([chr_, start_extended, end_extended, gene, strand_])
 
     df_extended = pd.DataFrame(extended_rows, columns=["chr", "start_new", "end_new", "gene_name", "strand"])
     return df_extended
 
+
 def compute_gene_peak_distance_matrix(
-    data_atac: pd.DataFrame,
-    data_rna: pd.DataFrame,
-    gene_coordinates_intersect: pd.DataFrame
+    data_atac: pd.DataFrame, data_rna: pd.DataFrame, gene_coordinates_intersect: pd.DataFrame
 ) -> np.ndarray:
     """
     Compute a distance matrix between peaks (ATAC) and genes (RNA), accounting for strand.
@@ -129,15 +120,15 @@ def compute_gene_peak_distance_matrix(
     logger.info("Starting computation of gene-peak distances...")
     logger.info(f"Number of genes: {len(data_rna.var.index)}, Number of peaks: {len(data_atac.var.index)}")
     logger.debug(f"ATAC var columns: {data_atac.var.columns}")
-    assert 'chr' in data_atac.var.columns, "'chr' column is missing in data_atac.var!"
-    assert 'start' in data_atac.var.columns, "'start' column is missing in data_atac.var!"
-    assert 'end' in data_atac.var.columns, "'end' column is missing in data_atac.var!"
+    assert "chr" in data_atac.var.columns, "'chr' column is missing in data_atac.var!"
+    assert "start" in data_atac.var.columns, "'start' column is missing in data_atac.var!"
+    assert "end" in data_atac.var.columns, "'end' column is missing in data_atac.var!"
 
     logger.debug(f"Gene coordinates columns: {gene_coordinates_intersect.columns}")
-    assert 'chr_gene' in gene_coordinates_intersect.columns, "'chr_gene' column is missing!"
-    assert 'start' in gene_coordinates_intersect.columns, "'start' column is missing!"
-    assert 'end' in gene_coordinates_intersect.columns, "'end' column is missing!"
-    assert 'strand' in gene_coordinates_intersect.columns, "'strand' column is missing!"
+    assert "chr_gene" in gene_coordinates_intersect.columns, "'chr_gene' column is missing!"
+    assert "start" in gene_coordinates_intersect.columns, "'start' column is missing!"
+    assert "end" in gene_coordinates_intersect.columns, "'end' column is missing!"
+    assert "strand" in gene_coordinates_intersect.columns, "'strand' column is missing!"
 
     peak_gene_distance = []
 
@@ -154,20 +145,13 @@ def compute_gene_peak_distance_matrix(
 
         # Build pairs of all peaks with this gene
         atac_var_all = pd.DataFrame(
-            itertools.product(data_atac.var["peak_name"].values, [gene]),
-            columns=["peak_name", "gene"]
+            itertools.product(data_atac.var["peak_name"].values, [gene]), columns=["peak_name", "gene"]
         )
 
         # Merge to get peak coordinates
+        atac_var_all = atac_var_all.merge(data_atac.var[["peak_name", "chr", "mid"]], on="peak_name", how="inner")
         atac_var_all = atac_var_all.merge(
-            data_atac.var[["peak_name", "chr", "mid"]],
-            on="peak_name",
-            how="inner"
-        )
-        atac_var_all = atac_var_all.merge(
-            gene_coordinates_intersect[["gene", "chr_gene", "start", "end"]],
-            on="gene",
-            how="inner"
+            gene_coordinates_intersect[["gene", "chr_gene", "start", "end"]], on="gene", how="inner"
         )
 
         mid = atac_var_all["mid"].values
@@ -187,11 +171,7 @@ def compute_gene_peak_distance_matrix(
         distance = np.where(within_mask, 0, min_dist)
 
         # If chromosome doesn't match
-        distance = np.where(
-            atac_var_all["chr"].values == atac_var_all["chr_gene"].values,
-            distance,
-            -1
-        )
+        distance = np.where(atac_var_all["chr"].values == atac_var_all["chr_gene"].values, distance, -1)
 
         peak_gene_distance.append(distance)
 

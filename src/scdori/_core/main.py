@@ -1,22 +1,20 @@
-#################################
-# main.py
-#################################
 import logging
-import torch
-import numpy as np
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split
-
-from scdori import config
-from scdori.data_io import load_scdori_inputs, save_model_weights
-from scdori.utils import set_seed
-from scdori.models import scDoRI
-from scdori.train_scdori import train_scdori_phases
-from scdori.train_grn import train_model_grn
-from scdori.models import initialize_scdori_parameters
 from pathlib import Path
 
+import numpy as np
+import torch
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader, TensorDataset
+
+from . import config
+from .data_io import load_scdori_inputs, save_model_weights
+from .models import initialize_scdori_parameters, scDoRI
+from .train_grn import train_model_grn
+from .train_scdori import train_scdori_phases
+from .utils import set_seed
+
 logger = logging.getLogger(__name__)
+
 
 def run_scdori_pipeline():
     """
@@ -70,16 +68,16 @@ def run_scdori_pipeline():
     train_idx, eval_idx = train_test_split(indices, test_size=0.2, random_state=42)
 
     train_dataset = TensorDataset(torch.from_numpy(train_idx))
-    train_loader  = DataLoader(train_dataset, batch_size=config.batch_size_cell, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=config.batch_size_cell, shuffle=True)
 
-    eval_dataset  = TensorDataset(torch.from_numpy(eval_idx))
-    eval_loader   = DataLoader(eval_dataset, batch_size=config.batch_size_cell, shuffle=False)
+    eval_dataset = TensorDataset(torch.from_numpy(eval_idx))
+    eval_loader = DataLoader(eval_dataset, batch_size=config.batch_size_cell, shuffle=False)
 
     # 3) Build integrated model
     num_genes = rna_metacell.n_vars
     num_peaks = atac_metacell.n_vars
     # Suppose we deduce num_tfs from somewhere
-    num_tfs   = 100  # example
+    num_tfs = 100  # example
     model = scDoRI(
         device=device,
         num_genes=num_genes,
@@ -88,16 +86,11 @@ def run_scdori_pipeline():
         num_topics=config.num_topics,
         num_batches=config.num_batches,
         dim_encoder1=config.dim_encoder1,
-        dim_encoder2=config.dim_encoder2
+        dim_encoder2=config.dim_encoder2,
     ).to(device)
-    
+
     initialize_scdori_parameters(
-        model,
-        gene_peak_dist,
-        gene_peak_fixed,
-        insilico_act=insilico_act,
-        insilico_rep=insilico_rep,
-        phase="warmup"
+        model, gene_peak_dist, gene_peak_fixed, insilico_act=insilico_act, insilico_rep=insilico_rep, phase="warmup"
     )
 
     # 4) Train Phase 1 + 2
@@ -106,12 +99,7 @@ def run_scdori_pipeline():
 
     # 5) Phase 3 => GRN
     initialize_scdori_parameters(
-        model,
-        gene_peak_dist,
-        gene_peak_fixed,
-        insilico_act=insilico_act,
-        insilico_rep=insilico_rep,
-        phase="grn"
+        model, gene_peak_dist, gene_peak_fixed, insilico_act=insilico_act, insilico_rep=insilico_rep, phase="grn"
     )
     model = train_model_grn(model, device, train_loader, eval_loader)
     save_model_weights(model, Path(config.weights_folder_grn), "grn_final")

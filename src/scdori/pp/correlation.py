@@ -1,21 +1,22 @@
+import logging
+
 import numpy as np
 import pandas as pd
-import logging
-from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
+
 
 def compute_in_silico_chipseq(
     atac_matrix: np.ndarray,
     rna_matrix: np.ndarray,
     motif_scores: pd.DataFrame,
     percentile: float = 99.9,
-    n_bg: int = 10000
+    n_bg: int = 10000,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Compute correlation-based in-silico ChIP-seq embeddings, separating activator
-    and repressor signals.
+    Compute correlation-based in-silico ChIP-seq embeddings, separating activator and repressor signals.
 
     Steps
     -----
@@ -74,8 +75,8 @@ def compute_in_silico_chipseq(
     pearson_r = (X.T @ Y) / n_cells
     pearson_r = np.nan_to_num(pearson_r)
 
-    pearson_r_act = np.clip(pearson_r, 0, None)   # only positive
-    pearson_r_rep = np.clip(pearson_r, None, 0)   # only negative
+    pearson_r_act = np.clip(pearson_r, 0, None)  # only positive
+    pearson_r_rep = np.clip(pearson_r, None, 0)  # only negative
 
     pearson_r_act_sig = np.zeros_like(pearson_r_act)
     pearson_r_rep_sig = np.zeros_like(pearson_r_rep)
@@ -88,7 +89,7 @@ def compute_in_silico_chipseq(
         # Find background peaks with smallest motif score
         scores_t = motif_scores[tf_name].values
         order = np.argsort(scores_t)
-        bg_idx = order[:min(n_bg, n_peaks)]  # top n_bg smallest motif peaks
+        bg_idx = order[: min(n_bg, n_peaks)]  # top n_bg smallest motif peaks
 
         # Activator significance
         bg_vals_act = pearson_r_act[bg_idx, t]

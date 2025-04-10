@@ -1,12 +1,12 @@
-#################################
-# utils.py
-#################################
-import torch
-import numpy as np
-import random
 import logging
+import random
+from collections.abc import Callable
+
+import numpy as np
+import torch
 
 logger = logging.getLogger(__name__)
+
 
 def set_seed(seed=200):
     """
@@ -35,19 +35,12 @@ def set_seed(seed=200):
         torch.cuda.manual_seed_all(seed)
     logger.info(f"Random seed set to {seed}.")
 
-def log_nb_positive(
-    x,
-    mu,
-    theta,
-    eps: float = 1e-8,
-    log_fn: callable = torch.log,
-    lgamma_fn: callable = torch.lgamma,
-):
+
+def log_nb_positive(x, mu, theta, eps: float = 1e-8, log_fn: Callable = torch.log, lgamma_fn: Callable = torch.lgamma):
     """
     Compute the log-likelihood for a Negative Binomial (NB) distribution.
 
-    This function is often used for modeling overdispersed count data in
-    scRNA-seq .
+    This function is often used for modeling overdispersed count data in scRNA-seq.
 
     Parameters
     ----------

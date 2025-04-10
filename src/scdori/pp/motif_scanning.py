@@ -1,14 +1,16 @@
-import pandas as pd
-from tqdm import tqdm
-import numpy as np
 import logging
-from sklearn.preprocessing import MinMaxScaler
-from pathlib import Path
 import subprocess
-from tangermeme.io import read_meme, extract_loci
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+from tangermeme.io import extract_loci, read_meme
 from tangermeme.tools.fimo import fimo
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
+
 
 def compute_motif_scores(
     bed_file: Path,
@@ -17,7 +19,7 @@ def compute_motif_scores(
     key_to_tf: dict,
     n_peaks: int,
     window: int = 500,
-    threshold: float = 1e-3
+    threshold: float = 1e-3,
 ) -> pd.DataFrame:
     """
     Compute a motif score matrix (n_peaks x n_TFs) by scanning peak sequences with FIMO (from tangermeme).
@@ -70,14 +72,17 @@ def compute_motif_scores(
     # Run FIMO
     hits_list = fimo(pwms_sub, X, threshold=threshold)
     all_tf_cols = sorted(list(set(key_to_tf.values())))
-    
+
     peak_motif_scores = []
 
     for k in tqdm(range(len(hits_list))):
         # Group by motif_name and sequence_name, taking the max score per group
-        motif_df = hits_list[k][['motif_name', 'sequence_name', 'score']].groupby(
-            ['motif_name', 'sequence_name']
-        ).max().reset_index()
+        motif_df = (
+            hits_list[k][["motif_name", "sequence_name", "score"]]
+            .groupby(["motif_name", "sequence_name"])
+            .max()
+            .reset_index()
+        )
 
         if motif_df.shape[0] > 0:
             all_sequences = pd.DataFrame({"sequence_name": range(n_peaks)})
@@ -100,7 +105,7 @@ def compute_motif_scores(
     else:
         logger.warning("No motif scores were computed. Returning an empty DataFrame.")
         peak_motif_scores = pd.DataFrame(index=range(n_peaks))
-    
+
     # Ensure all TFs appear in columns, filling missing ones with 0
     remaining_tfs = set(key_to_tf.values()) - set(peak_motif_scores.columns)
     for tf in remaining_tfs:
@@ -114,11 +119,12 @@ def compute_motif_scores(
     scaler = MinMaxScaler()
     motif_scores = scaler.fit_transform(peak_motif_scores.values)
 
-    bed_file_peak = pd.read_csv(bed_file, sep='\t', header=None)
+    bed_file_peak = pd.read_csv(bed_file, sep="\t", header=None)
     df_motif = pd.DataFrame(motif_scores, columns=peak_motif_scores.columns, index=bed_file_peak[3].values)
 
     logger.info(f"Finished computing motif scores: {df_motif.shape}")
     return df_motif
+
 
 def simulate_pwm_scoring(pwm_matrix, bed_file, fasta_file, window):
     """
@@ -150,12 +156,9 @@ def simulate_pwm_scoring(pwm_matrix, bed_file, fasta_file, window):
     scores = np.random.rand(n_peaks)  # Randomly generated scores
     sequence_names = range(n_peaks)
 
-    df = pd.DataFrame({
-        "motif_name": ["motif1"] * n_peaks,
-        "sequence_name": sequence_names,
-        "score": scores
-    })
+    df = pd.DataFrame({"motif_name": ["motif1"] * n_peaks, "sequence_name": sequence_names, "score": scores})
     return df
+
 
 def load_motif_database(motif_path: Path, final_tfs: list[str]) -> tuple[dict, dict]:
     """
@@ -194,10 +197,11 @@ def load_motif_database(motif_path: Path, final_tfs: list[str]) -> tuple[dict, d
 
     df_map = pd.DataFrame({"key": selected_keys, "TF": selected_tfs}).drop_duplicates("TF")
     pwms_sub = {row.key: pwms[row.key] for _, row in df_map.iterrows()}
-    key_to_tf = dict(zip(df_map["key"], df_map["TF"]))
+    key_to_tf = dict(zip(df_map["key"], df_map["TF"], strict=False))
 
     logger.info(f"Subselected {len(pwms_sub)} motifs for {len(final_tfs)} TFs.")
     return pwms_sub, key_to_tf
+
 
 def run_bedtools_intersect(a_bed: Path, b_bed: Path, out_bed: Path) -> None:
     """

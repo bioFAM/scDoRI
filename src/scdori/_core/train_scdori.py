@@ -1,17 +1,15 @@
-##################################
-# train_scdori.py
-##################################
-import torch
 import logging
-from tqdm import tqdm
-import copy
 from pathlib import Path
-# from scdori import config
-from scdori.utils import log_nb_positive
-from scdori.dataloader import create_minibatch
-from scdori.data_io import save_model_weights
+
+import torch
+from tqdm import tqdm
+
+from .data_io import save_model_weights
+from .dataloader import create_minibatch
+from .utils import log_nb_positive
 
 logger = logging.getLogger(__name__)
+
 
 def get_phase_scdori(epoch, config_file):
     """
@@ -35,6 +33,7 @@ def get_phase_scdori(epoch, config_file):
     else:
         return "warmup_2"
 
+
 def get_loss_weights_scdori(phase, config_file):
     """
     Get the loss weight dictionary for the specified phase.
@@ -55,27 +54,20 @@ def get_loss_weights_scdori(phase, config_file):
     if phase == "warmup_1":
         return {
             "atac": config_file.weight_atac_phase1,
-            "tf":   config_file.weight_tf_phase1,
-            "rna":  config_file.weight_rna_phase1
+            "tf": config_file.weight_tf_phase1,
+            "rna": config_file.weight_rna_phase1,
         }
     else:
         # warmup_2
         return {
             "atac": config_file.weight_atac_phase2,
-            "tf":   config_file.weight_tf_phase2,
-            "rna":  config_file.weight_rna_phase2
+            "tf": config_file.weight_tf_phase2,
+            "rna": config_file.weight_rna_phase2,
         }
 
+
 def compute_eval_loss_scdori(
-    model,
-    device,
-    eval_loader,
-    rna_anndata,
-    atac_anndata,
-    num_cells,
-    tf_indices,
-    encoding_batch_onehot,
-    config_file
+    model, device, eval_loader, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot, config_file
 ):
     """
     Compute the validation loss for scDoRI.
@@ -118,44 +110,47 @@ def compute_eval_loss_scdori(
             cell_indices = batch_data[0].to(device)
             B = cell_indices.shape[0]
 
-            (input_matrix, tf_exp, library_size_value, num_cells_value,
-             input_batch) = create_minibatch(
-                device, cell_indices, rna_anndata, atac_anndata,
-                num_cells, tf_indices, encoding_batch_onehot
+            (input_matrix, tf_exp, library_size_value, num_cells_value, input_batch) = create_minibatch(
+                device, cell_indices, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
             )
 
-            rna_input  = input_matrix[:, :model.num_genes]
-            atac_input = input_matrix[:, model.num_genes:]
-            tf_input   = tf_exp
+            rna_input = input_matrix[:, : model.num_genes]
+            atac_input = input_matrix[:, model.num_genes :]
+            tf_input = tf_exp
 
-            log_lib_rna  = library_size_value[:, 0].reshape(-1, 1)
+            log_lib_rna = library_size_value[:, 0].reshape(-1, 1)
             log_lib_atac = library_size_value[:, 1].reshape(-1, 1)
             batch_onehot = input_batch
 
             # Evaluate in "warmup_2" style
             out = model(
-                rna_input, atac_input, tf_input, tf_input,
-                log_lib_rna, log_lib_atac, num_cells_value,
+                rna_input,
+                atac_input,
+                tf_input,
+                tf_input,
+                log_lib_rna,
+                log_lib_atac,
+                num_cells_value,
                 batch_onehot,
-                phase="warmup_2"
+                phase="warmup_2",
             )
             preds_atac = out["preds_atac"]
-            mu_nb_tf   = out["mu_nb_tf"]
-            mu_nb_rna  = out["mu_nb_rna"]
+            mu_nb_tf = out["mu_nb_tf"]
+            mu_nb_rna = out["mu_nb_rna"]
 
             # ATAC => Poisson
-            library_factor_peak = torch.exp(log_lib_atac.view(B,1))
+            library_factor_peak = torch.exp(log_lib_atac.view(B, 1))
             preds_poisson = preds_atac * library_factor_peak
-            criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction='sum')
+            criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction="sum")
             loss_atac = criterion_poisson(preds_poisson, atac_input)
 
             # TF => NB
-            alpha_tf = torch.nn.functional.softplus(model.tf_alpha_nb).repeat(B,1)
+            alpha_tf = torch.nn.functional.softplus(model.tf_alpha_nb).repeat(B, 1)
             nb_tf_ll = log_nb_positive(tf_input, mu_nb_tf, alpha_tf).sum(dim=1).mean()
             loss_tf = -nb_tf_ll
 
             # RNA => NB
-            alpha_rna = torch.nn.functional.softplus(model.rna_alpha_nb).repeat(B,1)
+            alpha_rna = torch.nn.functional.softplus(model.rna_alpha_nb).repeat(B, 1)
             nb_rna_ll = log_nb_positive(rna_input, mu_nb_rna, alpha_rna).sum(dim=1).mean()
             loss_rna = -nb_rna_ll
 
@@ -196,6 +191,7 @@ def compute_eval_loss_scdori(
 
     return eval_loss, eval_loss_atac, eval_loss_tf, eval_loss_rna
 
+
 def train_scdori_phases(
     model,
     device,
@@ -206,7 +202,7 @@ def train_scdori_phases(
     num_cells,
     tf_indices,
     encoding_batch_onehot,
-    config_file
+    config_file,
 ):
     """
     Train the scDoRI model in two warmup phases:
@@ -253,7 +249,7 @@ def train_scdori_phases(
     """
     optimizer = torch.optim.Adam(model.parameters(), lr=config_file.learning_rate_scdori)
 
-    best_eval_loss = float('inf')
+    best_eval_loss = float("inf")
     val_patience = 0
     max_val_patience = config_file.phase1_patience
 
@@ -273,14 +269,12 @@ def train_scdori_phases(
             cell_indices = batch_data[0].to(device)
             B = cell_indices.shape[0]
 
-            (input_matrix, tf_exp, library_size_value, num_cells_value,
-             input_batch) = create_minibatch(
-                device, cell_indices, rna_anndata, atac_anndata,
-                num_cells, tf_indices, encoding_batch_onehot
+            (input_matrix, tf_exp, library_size_value, num_cells_value, input_batch) = create_minibatch(
+                device, cell_indices, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
             )
 
-            rna_input = input_matrix[:, :model.num_genes]
-            atac_input = input_matrix[:, model.num_genes:]
+            rna_input = input_matrix[:, : model.num_genes]
+            atac_input = input_matrix[:, model.num_genes :]
             tf_input = tf_exp
 
             log_lib_rna = library_size_value[:, 0].reshape(-1, 1)
@@ -291,10 +285,15 @@ def train_scdori_phases(
             topic_tf_input = tf_input
 
             out = model(
-                rna_input, atac_input, tf_input, topic_tf_input,
-                log_lib_rna, log_lib_atac, num_cells_value,
+                rna_input,
+                atac_input,
+                tf_input,
+                topic_tf_input,
+                log_lib_rna,
+                log_lib_atac,
+                num_cells_value,
                 batch_onehot,
-                phase=phase
+                phase=phase,
             )
 
             preds_atac = out["preds_atac"]
@@ -302,18 +301,18 @@ def train_scdori_phases(
             mu_nb_rna = out["mu_nb_rna"]
 
             # 1) ATAC => Poisson
-            library_factor_peak = torch.exp(log_lib_atac.view(B,1))
+            library_factor_peak = torch.exp(log_lib_atac.view(B, 1))
             preds_poisson = preds_atac * library_factor_peak
-            criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction='sum')
+            criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction="sum")
             loss_atac = criterion_poisson(preds_poisson, atac_input)
 
             # 2) TF => NB
-            alpha_tf = torch.nn.functional.softplus(model.tf_alpha_nb).repeat(B,1)
+            alpha_tf = torch.nn.functional.softplus(model.tf_alpha_nb).repeat(B, 1)
             nb_tf_ll = log_nb_positive(tf_input, mu_nb_tf, alpha_tf).sum(dim=1).mean()
             loss_tf = -nb_tf_ll
 
             # 3) RNA => NB
-            alpha_rna = torch.nn.functional.softplus(model.rna_alpha_nb).repeat(B,1)
+            alpha_rna = torch.nn.functional.softplus(model.rna_alpha_nb).repeat(B, 1)
             nb_rna_ll = log_nb_positive(rna_input, mu_nb_rna, alpha_rna).sum(dim=1).mean()
             loss_rna = -nb_rna_ll
 
@@ -336,12 +335,7 @@ def train_scdori_phases(
                 + config_file.l2_penalty_gene_peak * l2_norm_gene_peak
             )
 
-            total_loss = (
-                weights["atac"] * loss_atac
-                + weights["tf"]   * loss_tf
-                + weights["rna"]  * loss_rna
-                + loss_norm
-            )
+            total_loss = weights["atac"] * loss_atac + weights["tf"] * loss_tf + weights["rna"] * loss_rna + loss_norm
 
             optimizer.zero_grad()
             total_loss.backward()
@@ -370,11 +364,15 @@ def train_scdori_phases(
         # Evaluate periodically
         if (epoch + 1) % config_file.eval_frequency == 0:
             eval_loss, eval_loss_atac, eval_loss_tf, eval_loss_rna = compute_eval_loss_scdori(
-                model, device, eval_loader,
-                rna_anndata, atac_anndata,
-                num_cells, tf_indices,
+                model,
+                device,
+                eval_loader,
+                rna_anndata,
+                atac_anndata,
+                num_cells,
+                tf_indices,
                 encoding_batch_onehot,
-                config_file
+                config_file,
             )
 
             logger.info(

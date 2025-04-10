@@ -1,17 +1,18 @@
-import torch
 import logging
-import copy
-from tqdm import tqdm
-import scipy.sparse as sp
-import numpy as np
-#from scdori import config
-from scdori.utils import log_nb_positive
-from scdori.dataloader import create_minibatch
-from scdori.evaluation import get_latent_topics
 from pathlib import Path
-from scdori.data_io import save_model_weights
+
+import numpy as np
+import scipy.sparse as sp
+import torch
+from tqdm import tqdm
+
+from .data_io import save_model_weights
+from .dataloader import create_minibatch
+from .evaluation import get_latent_topics
+from .utils import log_nb_positive
 
 logger = logging.getLogger(__name__)
+
 
 def set_encoder_frozen(model, freeze=True):
     """
@@ -80,9 +81,18 @@ def set_topic_tf_frozen(model, freeze=True):
     logger.info(f"Topic-tf decoder is now {'frozen' if freeze else 'unfrozen'} in GRN phase.")
 
 
-def get_tf_expression(tf_expression_mode, model, device, train_loader,
-                      rna_anndata, atac_anndata, num_cells, tf_indices,
-                      encoding_batch_onehot, config_file):
+def get_tf_expression(
+    tf_expression_mode,
+    model,
+    device,
+    train_loader,
+    rna_anndata,
+    atac_anndata,
+    num_cells,
+    tf_indices,
+    encoding_batch_onehot,
+    config_file,
+):
     """
     Compute TF expression per topic.
 
@@ -121,10 +131,9 @@ def get_tf_expression(tf_expression_mode, model, device, train_loader,
     """
     if tf_expression_mode == "True":
         latent_all_torch = get_latent_topics(
-            model, device, train_loader, rna_anndata, atac_anndata,
-            num_cells, tf_indices, encoding_batch_onehot
+            model, device, train_loader, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
         )
-        top_k_indices = np.argsort(latent_all_torch, axis=0)[-config_file.cells_per_topic:]
+        top_k_indices = np.argsort(latent_all_torch, axis=0)[-config_file.cells_per_topic :]
         rna_tf_vals = rna_anndata.X[:, tf_indices]
         if sp.issparse(rna_tf_vals):
             rna_tf_vals = rna_tf_vals.todense()
@@ -137,27 +146,35 @@ def get_tf_expression(tf_expression_mode, model, device, train_loader,
 
         preds_tf_denoised_min, _ = torch.min(topic_tf, dim=1, keepdim=True)
         preds_tf_denoised_max, _ = torch.max(topic_tf, dim=1, keepdim=True)
-        topic_tf = ((topic_tf - preds_tf_denoised_min) /
-                    (preds_tf_denoised_max - preds_tf_denoised_min + 1e-9))
+        topic_tf = (topic_tf - preds_tf_denoised_min) / (preds_tf_denoised_max - preds_tf_denoised_min + 1e-9)
         topic_tf[topic_tf < config_file.tf_expression_clamp] = 0
         topic_tf = topic_tf.to(device)
         return topic_tf
     else:
         import torch.nn as nn  # Ensure this import is available if using nn.Softmax
+
         topic_tf = nn.Softmax(dim=1)(model.decoder.topic_tf_decoder.detach().cpu())
 
         preds_tf_denoised_min, _ = torch.min(topic_tf, dim=1, keepdim=True)
         preds_tf_denoised_max, _ = torch.max(topic_tf, dim=1, keepdim=True)
-        tf_normalised = ((topic_tf - preds_tf_denoised_min) /
-                         (preds_tf_denoised_max - preds_tf_denoised_min + 1e-9))
+        tf_normalised = (topic_tf - preds_tf_denoised_min) / (preds_tf_denoised_max - preds_tf_denoised_min + 1e-9)
         tf_normalised[tf_normalised < config_file.tf_expression_clamp] = 0
         topic_tf = tf_normalised.to(device)
         return topic_tf
 
 
-def compute_eval_loss_grn(model, device, train_loader, eval_loader,
-                          rna_anndata, atac_anndata, num_cells, tf_indices,
-                          encoding_batch_onehot, config_file):
+def compute_eval_loss_grn(
+    model,
+    device,
+    train_loader,
+    eval_loader,
+    rna_anndata,
+    atac_anndata,
+    num_cells,
+    tf_indices,
+    encoding_batch_onehot,
+    config_file,
+):
     """
     Compute the validation (evaluation) loss for the GRN phase.
 
@@ -202,9 +219,16 @@ def compute_eval_loss_grn(model, device, train_loader, eval_loader,
     nbatch = 0
 
     topic_tf_input = get_tf_expression(
-        config_file.tf_expression_mode, model, device, train_loader,
-        rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot,
-        config_file
+        config_file.tf_expression_mode,
+        model,
+        device,
+        train_loader,
+        rna_anndata,
+        atac_anndata,
+        num_cells,
+        tf_indices,
+        encoding_batch_onehot,
+        config_file,
     )
 
     with torch.no_grad():
@@ -213,27 +237,30 @@ def compute_eval_loss_grn(model, device, train_loader, eval_loader,
             B = cell_indices.shape[0]
 
             input_matrix, tf_exp, library_size_value, num_cells_value, input_batch = create_minibatch(
-                device, cell_indices, rna_anndata, atac_anndata, num_cells,
-                tf_indices, encoding_batch_onehot
+                device, cell_indices, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
             )
-            rna_input = input_matrix[:, :model.num_genes]
-            atac_input = input_matrix[:, model.num_genes:]
+            rna_input = input_matrix[:, : model.num_genes]
+            atac_input = input_matrix[:, model.num_genes :]
             log_lib_rna = library_size_value[:, 0].reshape(-1, 1)
             log_lib_atac = library_size_value[:, 1].reshape(-1, 1)
 
             out = model(
-                rna_input, atac_input, tf_exp,
+                rna_input,
+                atac_input,
+                tf_exp,
                 topic_tf_input,
-                log_lib_rna, log_lib_atac, num_cells_value,
+                log_lib_rna,
+                log_lib_atac,
+                num_cells_value,
                 input_batch,
-                phase="grn"
+                phase="grn",
             )
             preds_atac = out["preds_atac"]
             mu_nb_tf = out["mu_nb_tf"]
             mu_nb_rna = out["mu_nb_rna"]
             mu_nb_rna_grn = out["mu_nb_rna_grn"]
 
-            criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction='sum')
+            criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction="sum")
             library_factor_peak = torch.exp(log_lib_atac.view(B, 1))
             preds_poisson = preds_atac * library_factor_peak
             loss_atac = criterion_poisson(preds_poisson, atac_input)
@@ -293,9 +320,18 @@ def compute_eval_loss_grn(model, device, train_loader, eval_loader,
     return eval_loss, eval_loss_atac, eval_loss_tf, eval_loss_rna, eval_loss_rna_grn
 
 
-def train_model_grn(model, device, train_loader, eval_loader, rna_anndata,
-                    atac_anndata, num_cells, tf_indices, encoding_batch_onehot,
-                    config_file):
+def train_model_grn(
+    model,
+    device,
+    train_loader,
+    eval_loader,
+    rna_anndata,
+    atac_anndata,
+    num_cells,
+    tf_indices,
+    encoding_batch_onehot,
+    config_file,
+):
     """
     Train the model in Phase 2 (GRN phase).
 
@@ -351,20 +387,26 @@ def train_model_grn(model, device, train_loader, eval_loader, rna_anndata,
         set_topic_tf_frozen(model, freeze=False)
 
     optimizer_grn = torch.optim.Adam(
-        filter(lambda p: p.requires_grad, model.parameters()),
-        lr=config_file.learning_rate_grn
+        filter(lambda p: p.requires_grad, model.parameters()), lr=config_file.learning_rate_grn
     )
 
-    best_eval_loss = float('inf')
+    best_eval_loss = float("inf")
     val_patience = 0
     max_val_patience = config_file.grn_val_patience
     topic_tf_input = None
 
     if config_file.tf_expression_mode == "True":
         topic_tf_input = get_tf_expression(
-            config_file.tf_expression_mode, model, device, train_loader,
-            rna_anndata, atac_anndata, num_cells, tf_indices,
-            encoding_batch_onehot, config_file
+            config_file.tf_expression_mode,
+            model,
+            device,
+            train_loader,
+            rna_anndata,
+            atac_anndata,
+            num_cells,
+            tf_indices,
+            encoding_batch_onehot,
+            config_file,
         )
 
     logger.info("Starting GRN training")
@@ -380,9 +422,16 @@ def train_model_grn(model, device, train_loader, eval_loader, rna_anndata,
         # If the encoder is being updated, recalc topic_tf_input each epoch:
         if config_file.update_encoder_in_grn:
             topic_tf_input = get_tf_expression(
-                config_file.tf_expression_mode, model, device, train_loader,
-                rna_anndata, atac_anndata, num_cells, tf_indices,
-                encoding_batch_onehot, config_file
+                config_file.tf_expression_mode,
+                model,
+                device,
+                train_loader,
+                rna_anndata,
+                atac_anndata,
+                num_cells,
+                tf_indices,
+                encoding_batch_onehot,
+                config_file,
             )
 
         for batch_data in tqdm(train_loader, desc=f"GRN Epoch {epoch}"):
@@ -390,11 +439,10 @@ def train_model_grn(model, device, train_loader, eval_loader, rna_anndata,
             B = cell_indices.shape[0]
 
             input_matrix, tf_exp, library_size_value, num_cells_value, input_batch = create_minibatch(
-                device, cell_indices, rna_anndata, atac_anndata, num_cells,
-                tf_indices, encoding_batch_onehot
+                device, cell_indices, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
             )
-            rna_input = input_matrix[:, :model.num_genes]
-            atac_input = input_matrix[:, model.num_genes:]
+            rna_input = input_matrix[:, : model.num_genes]
+            atac_input = input_matrix[:, model.num_genes :]
             tf_input = tf_exp
             log_lib_rna = library_size_value[:, 0].reshape(-1, 1)
             log_lib_atac = library_size_value[:, 1].reshape(-1, 1)
@@ -402,16 +450,28 @@ def train_model_grn(model, device, train_loader, eval_loader, rna_anndata,
 
             if config_file.tf_expression_mode == "latent":
                 topic_tf_input = get_tf_expression(
-                    config_file.tf_expression_mode, model, device, train_loader,
-                    rna_anndata, atac_anndata, num_cells, tf_indices,
-                    encoding_batch_onehot, config_file
+                    config_file.tf_expression_mode,
+                    model,
+                    device,
+                    train_loader,
+                    rna_anndata,
+                    atac_anndata,
+                    num_cells,
+                    tf_indices,
+                    encoding_batch_onehot,
+                    config_file,
                 )
 
             out = model(
-                rna_input, atac_input, tf_input, topic_tf_input,
-                log_lib_rna, log_lib_atac, num_cells_value,
+                rna_input,
+                atac_input,
+                tf_input,
+                topic_tf_input,
+                log_lib_rna,
+                log_lib_atac,
+                num_cells_value,
                 batch_onehot,
-                phase="grn"
+                phase="grn",
             )
             preds_atac = out["preds_atac"]
             mu_nb_tf = out["mu_nb_tf"]
@@ -419,7 +479,7 @@ def train_model_grn(model, device, train_loader, eval_loader, rna_anndata,
             preds_rna_grn = out["preds_rna_from_grn"]
             mu_nb_rna_grn = out["mu_nb_rna_grn"]
 
-            criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction='sum')
+            criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction="sum")
             library_factor_peak = torch.exp(log_lib_atac.view(B, 1))
             preds_poisson = preds_atac * library_factor_peak
             loss_atac = criterion_poisson(preds_poisson, atac_input)
@@ -492,8 +552,16 @@ def train_model_grn(model, device, train_loader, eval_loader, rna_anndata,
         # Evaluate every config.eval_frequency epochs
         if (epoch + 1) % config_file.eval_frequency == 0:
             eval_loss, eval_loss_atac, eval_loss_tf, eval_loss_rna, eval_loss_rna_grn = compute_eval_loss_grn(
-                model, device, train_loader, eval_loader, rna_anndata, atac_anndata,
-                num_cells, tf_indices, encoding_batch_onehot, config_file
+                model,
+                device,
+                train_loader,
+                eval_loader,
+                rna_anndata,
+                atac_anndata,
+                num_cells,
+                tf_indices,
+                encoding_batch_onehot,
+                config_file,
             )
 
             logger.info(

@@ -1,8 +1,9 @@
+import logging
 import subprocess
 from pathlib import Path
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 def download_file(url: str, out_path: Path) -> None:
     """
@@ -27,6 +28,7 @@ def download_file(url: str, out_path: Path) -> None:
     cmd = f"wget -O {out_path} {url}"
     logger.info(f"Downloading {url} -> {out_path}")
     subprocess.run(cmd, shell=True, check=True)
+
 
 def unzip_gz(file_path: Path, remove_input: bool = False) -> None:
     """
@@ -53,12 +55,9 @@ def unzip_gz(file_path: Path, remove_input: bool = False) -> None:
         if gz_file.exists():
             gz_file.unlink()
 
+
 def resolve_genome_urls(
-    species: str,
-    assembly: str,
-    gtf_url: str,
-    chrom_sizes_url: str,
-    fasta_url: str
+    species: str, assembly: str, gtf_url: str, chrom_sizes_url: str, fasta_url: str
 ) -> tuple[str, str, str]:
     """
     Resolve final URLs for GTF, chromosome sizes, and FASTA files based on species and assembly.
@@ -99,13 +98,9 @@ def resolve_genome_urls(
                 "Gencode_mouse/release_M18/gencode.vM18.basic.annotation.gtf.gz"
             )
         if final_chrom_sizes_url is None:
-            final_chrom_sizes_url = (
-                "https://hgdownload.cse.ucsc.edu/goldenpath/mm10/bigZips/mm10.chrom.sizes"
-            )
+            final_chrom_sizes_url = "https://hgdownload.cse.ucsc.edu/goldenpath/mm10/bigZips/mm10.chrom.sizes"
         if final_fasta_url is None:
-            final_fasta_url = (
-                "https://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.fa.gz"
-            )
+            final_fasta_url = "https://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.fa.gz"
 
     # Known defaults for human hg38
     elif species.lower() == "human" and assembly.lower() == "hg38":
@@ -115,13 +110,9 @@ def resolve_genome_urls(
                 "Gencode_human/release_47/gencode.v47.primary_assembly.basic.annotation.gtf.gz"
             )
         if final_chrom_sizes_url is None:
-            final_chrom_sizes_url = (
-                "https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/hg38.chrom.sizes"
-            )
+            final_chrom_sizes_url = "https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/hg38.chrom.sizes"
         if final_fasta_url is None:
-            final_fasta_url = (
-                "https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/hg38.fa.gz"
-            )
+            final_fasta_url = "https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/hg38.fa.gz"
 
     else:
         # Unknown assembly => user must provide or raise an error if any is None
@@ -133,13 +124,14 @@ def resolve_genome_urls(
 
     return (final_gtf_url, final_chrom_sizes_url, final_fasta_url)
 
+
 def download_genome_references(
     genome_dir: Path,
     species: str,
     assembly: str,
     gtf_url: str = None,
     chrom_sizes_url: str = None,
-    fasta_url: str = None
+    fasta_url: str = None,
 ) -> None:
     """
     Download reference genome files (GTF, chrom.sizes, FASTA) for a given species and assembly.

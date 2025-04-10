@@ -16,7 +16,7 @@ dependencies:
   - scanpy=1.10.4
   - pip
   - seaborn
-  - python-igraph 
+  - python-igraph
   - leidenalg
   - seaborn
   - jupyter
@@ -29,4 +29,4 @@ dependencies:
     - umap_learn
     - harmonypy
     - tqdm
-    
+

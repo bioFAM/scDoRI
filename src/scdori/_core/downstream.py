@@ -1,23 +1,19 @@
-###############################################
-# downstream.py
-###############################################
-import torch
-import torch.nn as nn
-import numpy as np
-import umap
-import scanpy as sc
-import anndata
 import logging
 import os
-import pandas as pd
-import seaborn as sns
+
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+import numpy as np
+import pandas as pd
+import scanpy as sc
 import scipy
-from scdori import config
-from scdori.utils import set_seed, log_nb_positive
+import seaborn as sns
+import torch
+import torch.nn as nn
+import umap
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
+
 
 def load_best_model(model, best_model_path, device):
     """
@@ -50,7 +46,8 @@ def load_best_model(model, best_model_path, device):
     logger.info(f"Loaded best model weights from {best_model_path}")
     return model
 
-def compute_neighbors_umap(rna_anndata, rep_key="X_scdori"):
+
+def compute_neighbors_umap(rna_anndata, umap_n_neighbors, umap_min_dist, umap_random_state, rep_key="X_scdori"):
     """
     Compute neighbors and UMAP on the specified representation in an AnnData object.
 
@@ -58,6 +55,12 @@ def compute_neighbors_umap(rna_anndata, rep_key="X_scdori"):
     ----------
     rna_anndata : anndata.AnnData
         An AnnData object containing single-cell RNA data.
+    umap_n_neighbors : int
+        The number of neighbors for the UMAP computation.
+    umap_min_dist : float
+        The minimum distance between points in the UMAP embedding.
+    umap_random_state : int
+        The random seed for the UMAP computation.
     rep_key : str, optional
         The key in `rna_anndata.obsm` that holds the latent representation used for computing UMAP.
         Default is "X_scdori".
@@ -68,11 +71,12 @@ def compute_neighbors_umap(rna_anndata, rep_key="X_scdori"):
         Updates `rna_anndata` in place with neighbor graph and UMAP coordinates.
     """
     logger.info("=== Computing neighbors + UMAP on scDoRI latent ===")
-    sc.pp.neighbors(rna_anndata, use_rep=rep_key, n_neighbors=config.umap_n_neighbors)
-    sc.tl.umap(rna_anndata, min_dist=config.umap_min_dist, spread=1.0, random_state=config.umap_random_state)
+    sc.pp.neighbors(rna_anndata, use_rep=rep_key, n_neighbors=umap_n_neighbors)
+    sc.tl.umap(rna_anndata, min_dist=umap_min_dist, spread=1.0, random_state=umap_random_state)
     logger.info("Done. UMAP stored in rna_anndata.obsm['X_umap'].")
 
-def compute_topic_peak_umap(model, device):
+
+def compute_topic_peak_umap(model, device, umap_n_neighbors, umap_min_dist, umap_random_state):
     """
     Compute a UMAP embedding of the topic-peak decoder matrix. Each point on this embedding is a peak.
 
@@ -89,6 +93,12 @@ def compute_topic_peak_umap(model, device):
         The scDoRI model containing the topic_peak_decoder.
     device : torch.device
         The device (CPU or CUDA) used for PyTorch operations.
+    umap_n_neighbors : int
+        The number of neighbors for the UMAP computation.
+    umap_min_dist : float
+        The minimum distance between points in the UMAP embedding.
+    umap_random_state : int
+        The random seed for the UMAP computation.
 
     Returns
     -------
@@ -111,12 +121,13 @@ def compute_topic_peak_umap(model, device):
 
     peak_mat = topic_peaks_norm.T.cpu().numpy()  # shape => (num_peaks, num_topics)
 
-    reducer = umap.UMAP(n_neighbors=config.umap_n_neighbors,
-                        min_dist=config.umap_min_dist,
-                        random_state=config.umap_random_state)
+    reducer = umap.UMAP(n_neighbors=umap_n_neighbors, min_dist=umap_min_dist, random_state=umap_random_state)
     embedding_peaks = reducer.fit_transform(peak_mat)
-    logger.info(f"Done. umap_embedding_peaks shape => {embedding_peaks.shape} topic_embedding_peaks shape => {peak_mat.shape}")
+    logger.info(
+        f"Done. umap_embedding_peaks shape => {embedding_peaks.shape} topic_embedding_peaks shape => {peak_mat.shape}"
+    )
     return embedding_peaks, peak_mat
+
 
 def compute_topic_gene_matrix(model, device):
     """
@@ -164,7 +175,8 @@ def compute_topic_gene_matrix(model, device):
 
     return preds_gene.detach().cpu().numpy()
 
-def compute_atac_grn_activator_with_significance(model, device, cutoff_val, outdir):
+
+def compute_atac_grn_activator_with_significance(model, device, cutoff_val, outdir, num_permutations):
     """
     Compute significant ATAC-derived TF–gene links for activators with permutation-based significance.
 
@@ -181,6 +193,8 @@ def compute_atac_grn_activator_with_significance(model, device, cutoff_val, outd
         Significance cutoff (e.g., 0.95) for the percentile filtering.
     outdir : str
         Directory to save the computed GRN results.
+    num_permutations : int
+        The number of permutations for the significance computation.
 
     Returns
     -------
@@ -215,8 +229,10 @@ def compute_atac_grn_activator_with_significance(model, device, cutoff_val, outd
 
             # Compute background distribution by shuffling
             grn_bg_topic = []
-            for permutation in tqdm(range(config.num_permutations), desc=f"Permutations for Topic {i + 1}"):
-                insilico_chipseq_random = insilico_chipseq_embeddings[torch.randperm(insilico_chipseq_embeddings.size(0))]
+            for _ in tqdm(range(num_permutations), desc=f"Permutations for Topic {i + 1}"):
+                insilico_chipseq_random = insilico_chipseq_embeddings[
+                    torch.randperm(insilico_chipseq_embeddings.size(0))
+                ]
                 topic_gene_tf_bg = torch.matmul(topic_gene_peak, insilico_chipseq_random)
                 grn_bg = topic_gene_tf_bg / (effective_gene_peak_factor.sum(dim=1, keepdim=True) + 1e-8)
                 grn_bg_topic.append(grn_bg.T.detach().cpu())
@@ -230,12 +246,13 @@ def compute_atac_grn_activator_with_significance(model, device, cutoff_val, outd
             grn_atac_significant1.append(significant_grn1)
 
         grn_atac_significant1 = np.array(grn_atac_significant1)
-        np.save(os.path.join(outdir, f'grn_atac_activator_{cutoff_val}.npy'), grn_atac_significant1)
+        np.save(os.path.join(outdir, f"grn_atac_activator_{cutoff_val}.npy"), grn_atac_significant1)
 
         logger.info("Completed computing activator ATAC GRNs.")
         return grn_atac_significant1
 
-def compute_atac_grn_repressor_with_significance(model, device, cutoff_val, outdir):
+
+def compute_atac_grn_repressor_with_significance(model, device, cutoff_val, outdir, num_permutations):
     """
     Compute significant ATAC-derived TF–gene links for repressors using permutation-based significance.
 
@@ -283,8 +300,10 @@ def compute_atac_grn_repressor_with_significance(model, device, cutoff_val, outd
             grn_fg = grn_fg.T
 
             grn_bg_topic = []
-            for permutation in tqdm(range(config.num_permutations), desc=f"Permutations for Topic {i + 1}"):
-                insilico_chipseq_random = insilico_chipseq_embeddings_repressor[torch.randperm(insilico_chipseq_embeddings_repressor.size(0))]
+            for _ in tqdm(range(num_permutations), desc=f"Permutations for Topic {i + 1}"):
+                insilico_chipseq_random = insilico_chipseq_embeddings_repressor[
+                    torch.randperm(insilico_chipseq_embeddings_repressor.size(0))
+                ]
                 topic_gene_tf_bg = torch.matmul(topic_gene_peak_rep, insilico_chipseq_random)
                 grn_bg = topic_gene_tf_bg / (effective_gene_peak_factor.sum(dim=1, keepdim=True) + 1e-8)
                 grn_bg_topic.append(grn_bg.T.detach().cpu())
@@ -298,9 +317,10 @@ def compute_atac_grn_repressor_with_significance(model, device, cutoff_val, outd
             grn_atac_significant1.append(significant_grn1)
 
         grn_atac_significant1 = np.array(grn_atac_significant1)
-        np.save(os.path.join(outdir, f'grn_atac_repressor_{cutoff_val}.npy'), grn_atac_significant1)
+        np.save(os.path.join(outdir, f"grn_atac_repressor_{cutoff_val}.npy"), grn_atac_significant1)
         logger.info("Completed computing repressor ATAC GRNs.")
         return grn_atac_significant1
+
 
 def compute_significant_grn(model, device, cutoff_val_activator, cutoff_val_repressor, tf_normalised, outdir):
     """
@@ -335,8 +355,8 @@ def compute_significant_grn(model, device, cutoff_val_activator, cutoff_val_repr
         If the required ATAC-derived GRN files are missing.
     """
     os.makedirs(outdir, exist_ok=True)
-    activator_path = os.path.join(outdir, f'grn_atac_activator_{cutoff_val_activator}.npy')
-    repressor_path = os.path.join(outdir, f'grn_atac_repressor_{cutoff_val_repressor}.npy')
+    activator_path = os.path.join(outdir, f"grn_atac_activator_{cutoff_val_activator}.npy")
+    repressor_path = os.path.join(outdir, f"grn_atac_repressor_{cutoff_val_repressor}.npy")
     num_topics = model.num_topics
     num_tfs = model.num_tfs
 
@@ -376,11 +396,12 @@ def compute_significant_grn(model, device, cutoff_val_activator, cutoff_val_repr
     grn_act = torch.from_numpy(tf_normalised).reshape((num_topics, num_tfs, 1)) * grn_act
 
     logger.info("Saving computed GRNs...")
-    np.save(os.path.join(outdir, f'grn_activator__{cutoff_val_activator}.npy'), grn_act.numpy())
-    np.save(os.path.join(outdir, f'grn_repressor__{cutoff_val_repressor}.npy'), grn_rep.numpy())
+    np.save(os.path.join(outdir, f"grn_activator__{cutoff_val_activator}.npy"), grn_act.numpy())
+    np.save(os.path.join(outdir, f"grn_repressor__{cutoff_val_repressor}.npy"), grn_rep.numpy())
 
     logger.info("GRN computation completed successfully.")
     return grn_act.numpy(), grn_rep.numpy()
+
 
 def save_regulons(grn_matrix, tf_names, gene_names, num_topics, output_dir, mode="activator"):
     """
@@ -410,13 +431,10 @@ def save_regulons(grn_matrix, tf_names, gene_names, num_topics, output_dir, mode
     os.makedirs(output_path, exist_ok=True)
 
     for i, tf_name in enumerate(tf_names):
-        regulon = pd.DataFrame(
-            grn_matrix[:, i, :],
-            index=[f"Topic_{k}" for k in range(num_topics)],
-            columns=gene_names
-        )
+        regulon = pd.DataFrame(grn_matrix[:, i, :], index=[f"Topic_{k}" for k in range(num_topics)], columns=gene_names)
         regulon.to_csv(os.path.join(output_path, f"{tf_name}_{mode}.tsv"), sep="\t")
         print(f"Saved {mode} regulon for TF: {tf_name} in {output_path}")
+
 
 def visualize_downstream_targets(rna_anndata, gene_list, score_name="target_score", layer="log"):
     """
@@ -442,6 +460,7 @@ def visualize_downstream_targets(rna_anndata, gene_list, score_name="target_scor
     """
     sc.tl.score_genes(rna_anndata, gene_list, score_name=score_name)
     sc.pl.umap(rna_anndata, color=[score_name], layer=layer)
+
 
 def plot_topic_activation_heatmap(rna_anndata, groupby_key="celltype", aggregation="median"):
     """
@@ -479,16 +498,17 @@ def plot_topic_activation_heatmap(rna_anndata, groupby_key="celltype", aggregati
     plt.show()
     return df_grouped.T
 
+
 def get_top_activators_per_topic(
     grn_final,  # => shape (num_topics, num_tfs, num_genes)
-    tf_names,   # list of TF names => length = num_tfs
+    tf_names,  # list of TF names => length = num_tfs
     latent_all_torch,  # shape (num_cells, num_topics)
     selected_topics=None,
     top_k=10,
     clamp_value=1e-8,
     zscore=True,
     figsize=(25, 10),
-    out_fig=None
+    out_fig=None,
 ):
     """
     Identify and plot top activator transcription factors per topic (Topic regulators, TRs).
@@ -547,15 +567,11 @@ def get_top_activators_per_topic(
     topic_tf_grn_norm_act = np.array(topic_tf_grn_norm)
 
     df_topic_grn = pd.DataFrame(
-        topic_tf_grn_norm_act[selected_topics],
-        columns=tf_names,
-        index=[f"Topic_{k}" for k in selected_topics]
+        topic_tf_grn_norm_act[selected_topics], columns=tf_names, index=[f"Topic_{k}" for k in selected_topics]
     )
 
     if zscore:
-        df_topic_grn = df_topic_grn.apply(
-            lambda x: (x - x.mean()) / (x.std() + 1e-8), axis=0
-        )
+        df_topic_grn = df_topic_grn.apply(lambda x: (x - x.mean()) / (x.std() + 1e-8), axis=0)
 
     selected_tf = set()
     for i, row_name in enumerate(df_topic_grn.index):
@@ -568,7 +584,7 @@ def get_top_activators_per_topic(
     df_plot = df_topic_grn[selected_tf]
 
     sns.set_style("darkgrid")
-    plt.rcParams['figure.facecolor'] = "white"
+    plt.rcParams["figure.facecolor"] = "white"
     sns.set(font_scale=1.2)
 
     g = sns.clustermap(
@@ -577,10 +593,11 @@ def get_top_activators_per_topic(
         col_cluster=True,
         linewidths=1.5,
         dendrogram_ratio=0.1,
-        cmap='Spectral',
-        vmin=-4, vmax=4,
+        cmap="Spectral",
+        vmin=-4,
+        vmax=4,
         figsize=figsize,
-        annot_kws={"size": 20}
+        annot_kws={"size": 20},
     )
     if out_fig:
         g.figure.savefig(out_fig, dpi=300)
@@ -589,16 +606,17 @@ def get_top_activators_per_topic(
     logger.info("=== Done plotting top regulators per topic ===")
     return df_topic_grn, selected_tf
 
+
 def get_top_repressor_per_topic(
     grn_final,  # => shape (num_topics, num_tfs, num_genes)
-    tf_names,   # list of TF names => length = num_tfs
+    tf_names,  # list of TF names => length = num_tfs
     latent_all_torch,  # shape (num_cells, num_topics)
     selected_topics=None,
     top_k=5,
     clamp_value=1e-8,
     zscore=True,
     figsize=(25, 10),
-    out_fig=None
+    out_fig=None,
 ):
     """
     Identify and plot top repressor transcription factors per topic.
@@ -656,15 +674,11 @@ def get_top_repressor_per_topic(
     topic_tf_grn_norm_rep = np.array(topic_tf_grn_norm)
 
     df_topic_grn = pd.DataFrame(
-        topic_tf_grn_norm_rep[selected_topics],
-        columns=tf_names,
-        index=[f"Topic_{k}" for k in selected_topics]
+        topic_tf_grn_norm_rep[selected_topics], columns=tf_names, index=[f"Topic_{k}" for k in selected_topics]
     )
 
     if zscore:
-        df_topic_grn = df_topic_grn.apply(
-            lambda x: (x - x.mean()) / (x.std() + 1e-8), axis=0
-        )
+        df_topic_grn = df_topic_grn.apply(lambda x: (x - x.mean()) / (x.std() + 1e-8), axis=0)
 
     selected_tf = set()
     for i, row_name in enumerate(df_topic_grn.index):
@@ -677,7 +691,7 @@ def get_top_repressor_per_topic(
     df_plot = df_topic_grn[selected_tf]
 
     sns.set_style("darkgrid")
-    plt.rcParams['figure.facecolor'] = "white"
+    plt.rcParams["figure.facecolor"] = "white"
     sns.set(font_scale=1.2)
 
     g = sns.clustermap(
@@ -686,10 +700,11 @@ def get_top_repressor_per_topic(
         col_cluster=True,
         linewidths=1.5,
         dendrogram_ratio=0.1,
-        cmap='Spectral',
-        vmin=-4, vmax=4,
+        cmap="Spectral",
+        vmin=-4,
+        vmax=4,
         figsize=figsize,
-        annot_kws={"size": 20}
+        annot_kws={"size": 20},
     )
     if out_fig:
         g.figure.savefig(out_fig, dpi=300)
@@ -698,13 +713,14 @@ def get_top_repressor_per_topic(
     logger.info("=== Done plotting top repressor regulators per topic ===")
     return df_plot, selected_tf
 
+
 def compute_activator_tf_activity_per_cell(
     grn_final,  # => shape (num_topics, num_tfs, num_genes)
-    tf_names,   # list of TF names => length = num_tfs
+    tf_names,  # list of TF names => length = num_tfs
     latent_all_torch,  # shape (num_cells, num_topics)
     selected_topics=None,
     clamp_value=1e-8,
-    zscore=True
+    zscore=True,
 ):
     """
     Compute per-cell activity of activator TFs.
@@ -752,20 +768,21 @@ def compute_activator_tf_activity_per_cell(
     topic_tf_grn_act = np.array(topic_tf_grn)
     topic_tf_grn_norm_act = np.array(topic_tf_grn_norm)
 
-    cell_tf_act = np.einsum('ij,jk->ik', latent_all_torch, topic_tf_grn_norm_act)
+    cell_tf_act = np.einsum("ij,jk->ik", latent_all_torch, topic_tf_grn_norm_act)
 
     if zscore:
         cell_tf_act = scipy.stats.zscore(cell_tf_act, axis=0)
 
     return cell_tf_act
 
+
 def compute_repressor_tf_activity_per_cell(
     grn_final,  # => shape (num_topics, num_tfs, num_genes)
-    tf_names,   # list of TF names => length = num_tfs
+    tf_names,  # list of TF names => length = num_tfs
     latent_all_torch,  # shape (num_cells, num_topics)
     selected_topics=None,
     clamp_value=1e-8,
-    zscore=True
+    zscore=True,
 ):
     """
     Compute per-cell activity of repressor TFs.
@@ -813,7 +830,7 @@ def compute_repressor_tf_activity_per_cell(
     topic_tf_grn_rep = np.array(topic_tf_grn)
     topic_tf_grn_norm_rep = np.array(topic_tf_grn_norm)
 
-    cell_tf_rep = np.einsum('ij,jk->ik', latent_all_torch, topic_tf_grn_norm_rep)
+    cell_tf_rep = np.einsum("ij,jk->ik", latent_all_torch, topic_tf_grn_norm_rep)
 
     if zscore:
         cell_tf_rep = scipy.stats.zscore(cell_tf_rep, axis=0)

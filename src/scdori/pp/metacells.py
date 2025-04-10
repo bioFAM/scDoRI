@@ -1,18 +1,20 @@
+import logging
+
+import anndata as ad
 import numpy as np
 import pandas as pd
-import anndata as ad
 import scanpy as sc
-import logging
 import scipy.sparse as sp
 
 logger = logging.getLogger(__name__)
+
 
 def create_metacells(
     data_rna: ad.AnnData,
     data_atac: ad.AnnData,
     grouping_key: str = "leiden",
     resolution: float = 5.0,
-    batch_key: str = "sample"
+    batch_key: str = "sample",
 ) -> tuple[ad.AnnData, ad.AnnData]:
     """
     Create metacell-level RNA and ATAC AnnData objects by clustering cells and computing
@@ -22,7 +24,7 @@ def create_metacells(
     2. Uses Harmony integration for batch correction on the PCA embeddings.
     3. Clusters the RNA data with Leiden at the specified resolution, storing the
         cluster labels in ``data_rna.obs[grouping_key]``.
-    4. Summarizes RNA expression and ATAC accessibility for each cluster by taking 
+    4. Summarizes RNA expression and ATAC accessibility for each cluster by taking
         the mean of each feature across all cells in that cluster.
 
     Parameters
@@ -47,7 +49,7 @@ def create_metacells(
     -------
     (rna_metacell, atac_metacell) : tuple of anndata.AnnData
         - rna_metacell : shape (#clusters, n_genes)
-        - atac_metacell : shape (#clusters, n_peaks) 
+        - atac_metacell : shape (#clusters, n_peaks)
         The `.obs` index is set to the cluster labels, and the `.var` is inherited from the original `data_rna`/`data_atac`.
 
     Notes
