@@ -366,25 +366,10 @@ def train_model_grn(
     torch.nn.Module
         The trained model after the GRN phase completes or early stopping occurs.
     """
-    if not config_file.update_encoder_in_grn:
-        set_encoder_frozen(model, freeze=True)
-    else:
-        set_encoder_frozen(model, freeze=False)
-
-    if not config_file.update_peak_gene_in_grn:
-        set_peak_gene_frozen(model, freeze=True)
-    else:
-        set_peak_gene_frozen(model, freeze=False)
-
-    if not config_file.update_topic_peak_in_grn:
-        set_topic_peak_frozen(model, freeze=True)
-    else:
-        set_topic_peak_frozen(model, freeze=False)
-
-    if not config_file.update_topic_tf_in_grn:
-        set_topic_tf_frozen(model, freeze=True)
-    else:
-        set_topic_tf_frozen(model, freeze=False)
+    set_encoder_frozen(model, freeze=not config_file.update_encoder_in_grn)
+    set_peak_gene_frozen(model, freeze=not config_file.update_peak_gene_in_grn)
+    set_topic_peak_frozen(model, freeze=not config_file.update_topic_peak_in_grn)
+    set_topic_tf_frozen(model, freeze=not config_file.update_topic_tf_in_grn)
 
     optimizer_grn = torch.optim.Adam(
         filter(lambda p: p.requires_grad, model.parameters()), lr=config_file.learning_rate_grn
