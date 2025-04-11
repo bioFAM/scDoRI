@@ -24,8 +24,20 @@ classifiers = [
 ]
 dependencies = [
   "anndata",
-  # for debug logging (referenced from the issue template)
-  "session-info2",
+  "pybedtools",
+  "gtfparse",
+  "harmonypy",
+  "numpy",
+  "pandas",
+  "scanpy",
+  "scikit-learn",
+  "scipy",
+  "seaborn",
+  "tangermeme",
+  "umap-learn",
+  "session-info2",  # for debug logging (referenced from the issue template)
+  "torch",
+  "tqdm",
 ]
 optional-dependencies.dev = [
   "pre-commit",
@@ -47,10 +59,12 @@ optional-dependencies.doc = [
   "sphinxcontrib-bibtex>=1",
   "sphinxext-opengraph",
 ]
-optional-dependencies.test = [
-  "coverage",
+optional-dependencies.downstream = [
   "decoupler",
   "liana",
+]
+optional-dependencies.test = [
+  "coverage",
   "pytest",
 ]
 # https://docs.pypi.org/project_metadata/#project-urls
