@@ -1,7 +1,8 @@
 # Preprocessing
 
 ```{eval-rst}
-.. automodsumm:: scdori.pp
+.. currentmodule:: scdori
+.. autosummary::
     :toctree: ../generated
 
     compute_gene_peak_distance_matrix
