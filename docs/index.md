@@ -4,8 +4,8 @@
 
 ```{toctree}
 :maxdepth: 3
+:hidden:
 
-welcome.rst
 method_overview.rst
 training_guide.rst
 notebooks/preprocessing.ipynb
