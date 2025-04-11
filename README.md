@@ -2,7 +2,8 @@
 
 [![codecov](https://codecov.io/gh/bioFAM/scDoRI/graph/badge.svg?token=RK6G4LBUHL)](https://codecov.io/gh/bioFAM/scDoRI)
 
-![scDoRI Schematic](docs/_static/scdori_schematic_main.png)
+![graphical abstract](https://raw.githubusercontent.com/bioFAM/scDoRI/refs/heads/main/docs/_static/scdori_schematic_main.png)
+
 
 **scDoRI** is a deep learning model for single-cell **multiome** data (RNA + ATAC in same cell) that infers **enhancer-mediated gene regulatory networks (eGRNs)**. By combining an **encoder–decoder** approach with mechanistic constraints (enhancer–gene links, TF binding logic), scDoRI learns **topics** that group co-accessible peaks, their cis-linked genes and upstream activator and repressor TFs – all while scaling to large datasets via mini-batches.
 
@@ -74,7 +75,7 @@ docs/notebooks/training.ipynb
 
 The provided notebooks use the **mouse gastrulation dataset** from:
 
-📄 Paper: [Argelaguet et al., Bioarxiv 2022](https://www.biorxiv.org/content/10.1101/2022.06.15.496239v1)  
+📄 Paper: [Argelaguet et al., Bioarxiv 2022](https://www.biorxiv.org/content/10.1101/2022.06.15.496239v1)
 📦 Download: [Dropbox link](https://www.dropbox.com/scl/fo/9inmw43pz2bygtqepxl82/ALeeNjuEqw4qp0L9Z9t71xo/data/processed?rlkey=5ihgkvafegkke9jnldlnhw1x6&subfolder_nav_tracking=1&st=cixvwynt&dl=0)
 
 ## Configuration Notes
