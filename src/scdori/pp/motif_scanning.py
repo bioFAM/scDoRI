@@ -71,7 +71,6 @@ def compute_motif_scores(
 
     # Run FIMO
     hits_list = fimo(pwms_sub, X, threshold=threshold)
-    all_tf_cols = sorted(list(set(key_to_tf.values())))
 
     peak_motif_scores = []
 
@@ -112,7 +111,7 @@ def compute_motif_scores(
         peak_motif_scores[tf] = 0
 
     # Reorder columns
-    final_tf_list = sorted(list(set(key_to_tf.values())))
+    final_tf_list = sorted(set(key_to_tf.values()))
     peak_motif_scores = peak_motif_scores[final_tf_list]
 
     # Scale motif scores to [0, 1]
@@ -204,8 +203,7 @@ def load_motif_database(motif_path: Path, final_tfs: list[str]) -> tuple[dict, d
 
 
 def run_bedtools_intersect(a_bed: Path, b_bed: Path, out_bed: Path) -> None:
-    """
-    Run a 'bedtools intersect' command to keep intervals in file A that overlap intervals in file B.
+    """Run a 'bedtools intersect' command to keep intervals in file A that overlap intervals in file B.
 
     Parameters
     ----------
