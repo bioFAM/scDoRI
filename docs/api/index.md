@@ -14,12 +14,6 @@
     preprocessing.md
 ```
 
-## Preprocessing
-
-```{eval-rst}
-.. automodsumm:: scdori.pp
-```
-
 ## Core
 
 ```{eval-rst}
@@ -27,3 +21,10 @@
 
     scDoRI
 ```
+
+## Preprocessing
+
+```{eval-rst}
+.. automodsumm:: scdori.pp
+```
+
