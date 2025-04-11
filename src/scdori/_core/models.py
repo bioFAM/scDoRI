@@ -9,8 +9,7 @@ logger = logging.getLogger(__name__)
 
 class scDoRI(nn.Module):
     """
-    The scDoRI model integrates single cell multi-ome RNA and ATAC data to learn latent topic
-    representations and perform gene regulatory network (GRN) inference.
+    The scDoRI model integrates single cell multi-ome RNA and ATAC data to learn latent topic representations and perform gene regulatory network (GRN) inference.
 
     This model contains:
     - **Encoders** for RNA and ATAC, producing a shared topic distribution.
@@ -100,7 +99,7 @@ class scDoRI(nn.Module):
         dim_encoder2,
         batch_norm=True,
     ):
-        super(scDoRI, self).__init__()
+        super().__init__()
         self.device = device
         self.num_genes = num_genes
         self.num_peaks = num_peaks
@@ -231,8 +230,7 @@ class scDoRI(nn.Module):
         phase="warmup_1",
     ):
         """
-        Forward pass through scDoRI, producing predictions for ATAC, TF, and RNA
-        reconstructions (Phase 1), as well as GRN-based RNA predictions in GRN phase (Phase 2).
+        Forward pass through scDoRI, producing predictions for ATAC, TF, and RNA reconstructions (Phase 1), as well as GRN-based RNA predictions in GRN phase (Phase 2).
 
         Parameters
         ----------
@@ -272,9 +270,8 @@ class scDoRI(nn.Module):
             - "mu_nb_rna_grn": (B, num_genes), negative binomial mean of GRN-based RNA predictions.
             - "library_factor_tf": (B, 1), predicted library factor for TF.
             - "library_factor_rna": (B, 1), predicted library factor for RNA.
-        """
-        B = rna_input.shape[0]
 
+        """
         # 1) ENCODE => topic distribution
         theta, mu_theta = self.encode(rna_input, atac_input, log_lib_rna, log_lib_atac, num_cells)
 

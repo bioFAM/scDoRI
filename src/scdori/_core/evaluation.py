@@ -42,7 +42,6 @@ def get_latent_topics(
     with torch.no_grad():
         for batch_data in tqdm(data_loader, desc="Extracting latent topics"):
             cell_indices = batch_data[0].to(device)
-            B = cell_indices.shape[0]
 
             (input_matrix, tf_exp, library_size_value, num_cells_value, input_batch) = create_minibatch(
                 device, cell_indices, rna_anndata, atac_anndata, num_cells, tf_indices, encoding_batch_onehot
