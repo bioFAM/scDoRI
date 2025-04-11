@@ -8,7 +8,7 @@
 
 notebooks/preprocessing.ipynb
 notebooks/training.ipynb
-api/index
+api/index.md
 changelog.md
 contributing.md
 references.md
