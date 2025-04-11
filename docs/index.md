@@ -6,7 +6,7 @@
 :maxdepth: 3
 
 welcome.rst
-modeldescription.md
+method_overview.rst
 training_guide.rst
 notebooks/preprocessing.ipynb
 notebooks/training.ipynb
