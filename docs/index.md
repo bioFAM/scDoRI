@@ -3,8 +3,8 @@
 ```
 
 ```{toctree}
+:hidden: true
 :maxdepth: 3
-:hidden:
 
 welcome.rst
 method_overview.rst
