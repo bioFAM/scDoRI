@@ -79,7 +79,3 @@ Schematic Overview
 ------------------
 
 The figure above provides a schematic overview of the scDoRI model. Modules are color-coded by training phase, and matrix roles are explicitly annotated. Phase 1 involves joint training of the encoder and Modules 1--3. Phase 2 fine-tunes Module 4 to enable topic-specific GRN inference.
-
-----
-
-:ref:`Back to Main <index>`
