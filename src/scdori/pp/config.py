@@ -143,7 +143,7 @@ class PreprocessingConfig:
 
     # Calculate the min cutoff based on window_size and scaling factor
     @property
-    def peak_distance_min_cutoff(self) -> float:
+    def peak_distance_min_cutoff(self) -> float:  # noqa: D102
         return np.e ** (-1 * (self.window_size / self.peak_distance_scaling_factor))
 
 
