@@ -1,4 +1,4 @@
-# Plotting
+# Preprocessing
 
 ```{eval-rst}
 .. automodsumm:: scdori.pp
