@@ -138,9 +138,6 @@ def compute_gene_peak_distance_matrix(
 
     # Iterate over all genes
     for gene in tqdm(data_rna.var.index, total=len(data_rna.var.index)):
-        chr_gene = gene_coordinates_intersect.loc[gene, "chr_gene"]
-        start_gene = gene_coordinates_intersect.loc[gene, "start"]
-        end_gene = gene_coordinates_intersect.loc[gene, "end"]
         strand_gene = gene_coordinates_intersect.loc[gene, "strand"]
 
         # Build pairs of all peaks with this gene
