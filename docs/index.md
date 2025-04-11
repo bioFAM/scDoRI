@@ -3,9 +3,11 @@
 ```
 
 ```{toctree}
-:hidden: true
-:maxdepth: 1
+:maxdepth: 3
 
+welcome.rst
+modeldescription.md
+training_guide.rst
 notebooks/preprocessing.ipynb
 notebooks/training.ipynb
 api/index.md
