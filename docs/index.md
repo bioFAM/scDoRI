@@ -1,4 +1,4 @@
-```{include}
+```{include} welcome.rst
 
 ```
 

@@ -1,4 +1,4 @@
-.. _index:
+.. _welcome:
 
 =========================================================
 Welcome to scDoRI: Single-cell Deep Multi-Omic Regulatory Inference
