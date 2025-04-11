@@ -141,12 +141,3 @@ License & Citation
 
 This project is under MIT License. If scDoRI aids your research, please cite our
 upcoming publication. For questions, open a GitHub Issue or email the maintainers.
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   method_overview
-   training_guide
-   api_reference
-
