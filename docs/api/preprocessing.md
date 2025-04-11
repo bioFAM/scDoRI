@@ -4,23 +4,22 @@
 .. automodsumm:: scdori.pp
     :toctree: ../generated
 
-    ppConfig
-    compute_in_silico_chipseq
-    create_dir_if_not_exists
-    load_anndata
-    save_processed_datasets
-    download_genome_references
-    intersect_cells
-    remove_mitochondrial_genes
-    compute_hvgs_and_tfs
-    filter_protein_coding_genes
-    load_gtf
-    create_metacells
-    compute_motif_scores
-    load_motif_database
-    run_bedtools_intersect
-    keep_promoters_and_select_hv_peaks
     compute_gene_peak_distance_matrix
+    compute_hvgs_and_tfs
+    compute_in_silico_chipseq
+    compute_motif_scores
+    create_dir_if_not_exists
     create_extended_gene_bed
-
+    create_metacells
+    download_genome_references
+    filter_protein_coding_genes
+    intersect_cells
+    keep_promoters_and_select_hv_peaks
+    load_anndata
+    load_gtf
+    load_motif_database
+    ppConfig
+    remove_mitochondrial_genes
+    run_bedtools_intersect
+    save_processed_datasets
 ```
