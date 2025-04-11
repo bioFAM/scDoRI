@@ -26,7 +26,6 @@ from ._core import (
     trainConfig,
     visualize_downstream_targets,
 )
-from ._version import __version__, __version_tuple__
 from .pp import (
     compute_gene_peak_distance_matrix,
     compute_hvgs_and_tfs,
@@ -47,6 +46,7 @@ from .pp import (
     run_bedtools_intersect,
     save_processed_datasets,
 )
+from ._version import __version__, __version_tuple__
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)

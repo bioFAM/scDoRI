@@ -1,0 +1,71 @@
+# API
+
+```{eval-rst}
+.. module:: scdori
+```
+
+```{eval-rst}
+.. currentmodule:: scdori
+
+.. toctree::
+    :hidden:
+
+    core.md
+    preprocessing.md
+```
+
+## Core
+
+```{eval-rst}
+.. autosummary::
+
+    compute_activator_tf_activity_per_cell
+    compute_atac_grn_activator_with_significance
+    compute_atac_grn_repressor_with_significance
+    compute_neighbors_umap
+    compute_repressor_tf_activity_per_cell
+    compute_significant_grn
+    compute_topic_gene_matrix
+    compute_topic_peak_umap
+    get_latent_topics
+    get_latent_topics
+    get_tf_expression
+    get_top_activators_per_topic
+    get_top_repressor_per_topic
+    initialize_scdori_parameters
+    load_best_model
+    load_scdori_inputs save_model_weights
+    plot_topic_activation_heatmap
+    save_regulons
+    scDoRI
+    train_model_grn
+    train_scdori_phases
+    trainConfig
+    visualize_downstream_targets
+```
+
+## Preprocessing
+
+```{eval-rst}
+.. autosummary::
+
+    compute_gene_peak_distance_matrix
+    compute_hvgs_and_tfs
+    compute_in_silico_chipseq
+    compute_motif_scores
+    create_dir_if_not_exists
+    create_extended_gene_bed
+    create_metacells
+    download_genome_references
+    filter_protein_coding_genes
+    intersect_cells
+    keep_promoters_and_select_hv_peaks
+    load_anndata
+    load_gtf
+    load_motif_database
+    ppConfig
+    remove_mitochondrial_genes
+    run_bedtools_intersect
+    save_processed_datasets
+```
+
