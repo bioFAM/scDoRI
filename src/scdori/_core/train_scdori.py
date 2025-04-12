@@ -206,9 +206,10 @@ def train_scdori_phases(
 ):
     """
     Train the scDoRI model in two warmup phases:
+
+    The two phases are:
     1) Warmup Phase 1 (ATAC + TF focus).
     2) Warmup Phase 2 (adding RNA).
-
     Includes early stopping based on validation performance.
 
     Parameters
