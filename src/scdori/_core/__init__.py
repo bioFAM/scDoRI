@@ -12,9 +12,7 @@ from .downstream import (
     get_top_activators_per_topic,
     get_top_repressor_per_topic,
     load_best_model,
-    plot_topic_activation_heatmap,
     save_regulons,
-    visualize_downstream_targets,
 )
 from .evaluation import get_latent_topics
 from .models import initialize_scdori_parameters, scDoRI
