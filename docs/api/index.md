@@ -12,6 +12,7 @@
 
     core.md
     preprocessing.md
+    plotting.md
 ```
 
 ## Core
@@ -35,13 +36,11 @@
     initialize_scdori_parameters
     load_best_model
     load_scdori_inputs save_model_weights
-    plot_topic_activation_heatmap
     save_regulons
     scDoRI
     train_model_grn
     train_scdori_phases
     trainConfig
-    visualize_downstream_targets
 ```
 
 ## Preprocessing
@@ -67,5 +66,14 @@
     remove_mitochondrial_genes
     run_bedtools_intersect
     save_processed_datasets
+```
+
+## Plotting
+
+```{eval-rst}
+.. autosummary::
+
+    visualize_downstream_targets
+    plot_topic_activation_heatmap
 ```
 
