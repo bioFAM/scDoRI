@@ -60,17 +60,24 @@ to specify the location of RNA and ATAC anndata .h5ad files, motif file, and set
 ```bash
 docs/notebooks/preprocessing.ipynb
 ```
-### Step 2: Training and Downstream analysis
+### Step 2: Training
 
 #### Edit paths and parameters in:
 ```bash
 src/scdori/_core/config.py
 ```
 for scDoRI hyperparameters (number of topics, learning rate, epochs etc.) and specify path for preprocessed anndata objects and insilico-chipseq files
-#### Run training and downstream analysis notebook
+#### Run training notebook
 ```bash
 docs/notebooks/training.ipynb
 ```
+### Step 3: Downstream analysis
+
+#### Run downstream analysis notebook
+```bash
+docs/notebooks/downstream.ipynb
+```
+
 ## Dataset Demonstration
 
 The provided notebooks use the **mouse gastrulation dataset** from:
@@ -88,7 +95,7 @@ The provided notebooks use the **mouse gastrulation dataset** from:
   - Useful for focusing on known regulators/ genes of interest
 
 ## Documentation
-📖 Full documentation and API reference is hosted at: https://saraswatmanu.github.io/scDoRI/
+📖 Full documentation and API reference is hosted at: https://scdori.readthedocs.io/en/latest/
 
 Includes:
 - API reference (docstrings)
