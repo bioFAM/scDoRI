@@ -1,9 +1,9 @@
 # scDoRI: Single-cell Deep Multi-Omic Regulatory Inference
 
+[![Documentation Status](https://readthedocs.org/projects/scdori/badge/?version=latest)](https://scdori.readthedocs.io/en/latest/)
 [![codecov](https://codecov.io/gh/bioFAM/scDoRI/graph/badge.svg?token=RK6G4LBUHL)](https://codecov.io/gh/bioFAM/scDoRI)
 
 ![graphical abstract](https://raw.githubusercontent.com/bioFAM/scDoRI/refs/heads/main/docs/_static/scdori_schematic_main.png)
-
 
 **scDoRI** is a deep learning model for single-cell **multiome** data (RNA + ATAC in same cell) that infers **enhancer-mediated gene regulatory networks (eGRNs)**. By combining an **encoder–decoder** approach with mechanistic constraints (enhancer–gene links, TF binding logic), scDoRI learns **topics** that group co-accessible peaks, their cis-linked genes and upstream activator and repressor TFs – all while scaling to large datasets via mini-batches.
 
