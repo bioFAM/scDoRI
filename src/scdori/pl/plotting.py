@@ -4,7 +4,7 @@ import scanpy as sc
 import seaborn as sns
 
 
-def visualize_downstream_targets(rna_anndata, gene_list, score_name="target_score", layer="log"):
+def plot_downstream_targets(rna_anndata, gene_list, score_name="target_score", layer="log"):
     """
     Visualize the average expression of given genes on a UMAP embedding.
 

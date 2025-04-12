@@ -20,6 +20,8 @@ class PreprocessingConfig:
 
     Variables
     ---------
+    random_seed : int
+        Random seed for reproducibility.
     data_dir : str
         Directory where RNA and ATAC AnnData files are stored.
     genome_dir : str
@@ -87,11 +89,14 @@ class PreprocessingConfig:
     # Logging
     logging_level: int = logging.INFO
 
+    # Seed
+    random_seed: int = 3141
+
     # Directory structure
     data_dir: str = "/data/m015k/new_metacells/data_gastrulation_single_cell"
     genome_dir: str = "/data/m015k/new_metacells/mouse_genome_files"
     motif_directory: str = "/home/m015k/code/scDoRI/assets/motif_database"
-    output_subdir_name: str = "generated_data"
+    output_subdir_name: str = "generated"
 
     # Input Filenames
     rna_adata_file_name: str = "anndata.h5ad"

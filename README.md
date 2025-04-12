@@ -34,14 +34,14 @@ conda env create -f environment.yml
 conda activate scdori_env
 
 # Install the scDoRI package
-pip install .
+pip install . --no-deps
 ```
 
-or install the latest development version directly into your existing environment:
+<!-- or install the latest development version directly into your existing environment:
 
 ```bash
 pip install git+https://github.com/bioFAM/scDoRI@main
-```
+``` -->
 
 
 > ⚡ **Note**: The training process is GPU-accelerated and **highly recommended** to be run on a GPU-enabled machine.

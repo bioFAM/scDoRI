@@ -5,6 +5,6 @@
 .. autosummary::
     :toctree: ../generated
 
-    visualize_downstream_targets
+    plot_downstream_targets
     plot_topic_activation_heatmap
 ```
