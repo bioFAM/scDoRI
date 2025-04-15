@@ -11,8 +11,7 @@ def select_highly_variable_peaks_by_std(
     data_atac: ad.AnnData, n_top_peaks: int, cluster_key: str = "leiden"
 ) -> ad.AnnData:
     """
-    Select highly variable peaks based on the standard deviation of peak accessibility
-    across clusters.
+    Select highly variable peaks based on the standard deviation of peak accessibility across clusters.
 
     This function:
     1. Groups cells by `cluster_key` in `data_atac.obs`.
