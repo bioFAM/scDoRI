@@ -60,6 +60,7 @@ to specify the location of RNA and ATAC anndata .h5ad files, motif file, and set
 ```bash
 docs/notebooks/preprocessing.ipynb
 ```
+This step can take between a few hours to a day depending on the dataset size and number of features selected.
 ### Step 2: Training
 
 #### Edit paths and parameters in:
@@ -71,6 +72,7 @@ for scDoRI hyperparameters (number of topics, learning rate, epochs etc.) and sp
 ```bash
 docs/notebooks/training.ipynb
 ```
+This step again can take between a few hours to a day depending on the dataset size and number of features selected.
 ### Step 3: Downstream analysis
 
 #### Run downstream analysis notebook
