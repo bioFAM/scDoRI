@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 
 def run_scdori_pipeline():
     """
-    Run the scDoRI pipeline in three main phases:
+    Run the scDoRI pipeline in three main phases.
+
+    The main phases are:
     1) ATAC+TF warmup (phase 1 warmup),
     2) Add RNA (phase 1 full),
     3) GRN training (phase 2).

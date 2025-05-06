@@ -482,7 +482,6 @@ def get_top_activators_per_topic(
     logger.info("=== Plotting top activator regulators per topic ===")
 
     num_topics = grn_final.shape[0]
-    num_tfs = grn_final.shape[1]
     if selected_topics is None:
         selected_topics = range(num_topics)
 
@@ -500,7 +499,6 @@ def get_top_activators_per_topic(
         total_activity = grn_topic.sum() + clamp_value
         topic_tf_grn_norm.append(grn_topic / total_activity)
 
-    topic_tf_grn_act = np.array(topic_tf_grn)
     topic_tf_grn_norm_act = np.array(topic_tf_grn_norm)
 
     df_topic_grn = pd.DataFrame(
@@ -511,7 +509,7 @@ def get_top_activators_per_topic(
         df_topic_grn = df_topic_grn.apply(lambda x: (x - x.mean()) / (x.std() + 1e-8), axis=0)
 
     selected_tf = set()
-    for i, row_name in enumerate(df_topic_grn.index):
+    for _i, row_name in enumerate(df_topic_grn.index):
         row = df_topic_grn.loc[row_name].sort_values(ascending=False)
         top_tfs = row.head(top_k).index.values
         selected_tf.update(top_tfs)
@@ -590,7 +588,6 @@ def get_top_repressor_per_topic(
     logger.info("=== Plotting top repressor regulators per topic ===")
 
     num_topics = grn_final.shape[0]
-    num_tfs = grn_final.shape[1]
     if selected_topics is None:
         selected_topics = range(num_topics)
 
@@ -607,7 +604,6 @@ def get_top_repressor_per_topic(
         total_activity = grn_topic.sum() + clamp_value
         topic_tf_grn_norm.append(grn_topic / total_activity)
 
-    topic_tf_grn_rep = np.array(topic_tf_grn)
     topic_tf_grn_norm_rep = np.array(topic_tf_grn_norm)
 
     df_topic_grn = pd.DataFrame(
@@ -618,7 +614,7 @@ def get_top_repressor_per_topic(
         df_topic_grn = df_topic_grn.apply(lambda x: (x - x.mean()) / (x.std() + 1e-8), axis=0)
 
     selected_tf = set()
-    for i, row_name in enumerate(df_topic_grn.index):
+    for _i, row_name in enumerate(df_topic_grn.index):
         row = df_topic_grn.loc[row_name].sort_values(ascending=False)
         top_tfs = row.head(top_k).index.values
         selected_tf.update(top_tfs)
@@ -685,7 +681,6 @@ def compute_activator_tf_activity_per_cell(
     logger.info("=== Computing TF activity per cell ===")
 
     num_topics = grn_final.shape[0]
-    num_tfs = grn_final.shape[1]
     if selected_topics is None:
         selected_topics = range(num_topics)
 
@@ -702,7 +697,6 @@ def compute_activator_tf_activity_per_cell(
         total_activity = grn_topic.sum() + clamp_value
         topic_tf_grn_norm.append(grn_topic / total_activity)
 
-    topic_tf_grn_act = np.array(topic_tf_grn)
     topic_tf_grn_norm_act = np.array(topic_tf_grn_norm)
 
     cell_tf_act = np.einsum("ij,jk->ik", latent_all_torch, topic_tf_grn_norm_act)
@@ -747,7 +741,6 @@ def compute_repressor_tf_activity_per_cell(
     logger.info("=== Computing TF activity per cell ===")
 
     num_topics = grn_final.shape[0]
-    num_tfs = grn_final.shape[1]
     if selected_topics is None:
         selected_topics = range(num_topics)
 
@@ -764,7 +757,6 @@ def compute_repressor_tf_activity_per_cell(
         total_activity = grn_topic.sum() + clamp_value
         topic_tf_grn_norm.append(grn_topic / total_activity)
 
-    topic_tf_grn_rep = np.array(topic_tf_grn)
     topic_tf_grn_norm_rep = np.array(topic_tf_grn_norm)
 
     cell_tf_rep = np.einsum("ij,jk->ik", latent_all_torch, topic_tf_grn_norm_rep)

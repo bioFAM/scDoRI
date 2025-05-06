@@ -476,7 +476,6 @@ def train_model_grn(
             preds_atac = out["preds_atac"]
             mu_nb_tf = out["mu_nb_tf"]
             mu_nb_rna = out["mu_nb_rna"]
-            preds_rna_grn = out["preds_rna_from_grn"]
             mu_nb_rna_grn = out["mu_nb_rna_grn"]
 
             criterion_poisson = torch.nn.PoissonNLLLoss(log_input=False, reduction="sum")
