@@ -17,8 +17,8 @@ def create_metacells(
     batch_key: str = "sample",
 ) -> tuple[ad.AnnData, ad.AnnData]:
     """
-    Create metacell-level RNA and ATAC AnnData objects by clustering cells and computing
-    mean values per cluster.
+    Create metacell-level RNA and ATAC AnnData objects by clustering cells and computing mean values per cluster.
+
     This function:
     1. Normalizes and logs the RNA data, then runs PCA.
     2. Uses Harmony integration for batch correction on the PCA embeddings.

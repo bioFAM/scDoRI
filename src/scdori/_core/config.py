@@ -155,7 +155,7 @@ class TrainConfig:
     insilico_chipseq_rep_file: str = "insilico_chipseq_rep.npy"
 
     # RANDOM SEED
-    random_seed: int = 200
+    random_seed: int = 3141
 
     # BATCH / ARCHITECTURE
     batch_size_cell: int = 128

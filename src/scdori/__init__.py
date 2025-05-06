@@ -16,7 +16,6 @@ from ._core import (
     initialize_scdori_parameters,
     load_best_model,
     load_scdori_inputs,
-    plot_topic_activation_heatmap,
     save_model_weights,
     save_regulons,
     scDoRI,
@@ -24,9 +23,9 @@ from ._core import (
     train_model_grn,
     train_scdori_phases,
     trainConfig,
-    visualize_downstream_targets,
 )
 from ._version import __version__, __version_tuple__
+from .pl import plot_downstream_targets, plot_topic_activation_heatmap
 from .pp import (
     compute_gene_peak_distance_matrix,
     compute_hvgs_and_tfs,

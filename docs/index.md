@@ -4,12 +4,16 @@
 
 ```{toctree}
 :hidden: true
-:maxdepth: 1
+:maxdepth: 3
 
-api.md
+welcome.rst
+method_overview.rst
+training_guide.rst
+notebooks/preprocessing.ipynb
+notebooks/training.ipynb
+notebooks/downstream.ipynb
+api/index.md
 changelog.md
 contributing.md
 references.md
-
-notebooks/example
 ```
