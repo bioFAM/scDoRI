@@ -51,7 +51,7 @@ def filter_protein_coding_genes(data_rna: ad.AnnData, gtf_df: pd.DataFrame) -> a
     df_protein_coding = gtf_df[gtf_df["gene_type"] == "protein_coding"]
     pc_genes = set(df_protein_coding["gene_name"].unique())
     rna_genes = set(data_rna.var_names)
-    keep_genes = sorted(list(pc_genes & rna_genes))
+    keep_genes = sorted(pc_genes & rna_genes)
     data_rna_sub = data_rna[:, keep_genes].copy()
     logger.info(f"Filtered to protein-coding genes: {data_rna_sub.shape[1]} genes left.")
     return data_rna_sub
@@ -67,8 +67,7 @@ def compute_hvgs_and_tfs(
     min_cells: int = 20,
 ) -> tuple[ad.AnnData, list[str], list[str]]:
     """
-    Compute sets of Highly Variable Genes (HVGs) and TFs (transcription factors)
-    for scDoRI training.
+    Compute sets of Highly Variable Genes (HVGs) and TFs (transcription factors) for scDoRI training.
 
     This function:
       1. Identifies user-specified genes and TFs present in `data_rna`.
@@ -129,7 +128,7 @@ def compute_hvgs_and_tfs(
     num_genes_hvg = max(0, num_genes - len(valid_genes_user) - num_tfs)
 
     # 2) HVGs among TFs
-    tf_candidates = sorted(list((set(tf_names) - set(valid_tfs_user)) & set(data_rna.var_names)))
+    tf_candidates = sorted((set(tf_names) - set(valid_tfs_user)) & set(data_rna.var_names))
     data_rna_tf = data_rna[:, tf_candidates].copy()
     sc.pp.normalize_total(data_rna_tf)
     sc.pp.log1p(data_rna_tf)
@@ -139,7 +138,7 @@ def compute_hvgs_and_tfs(
 
     # 3) HVGs among non-TFs
     non_tf_candidates = set(data_rna.var_names) - set(selected_tfs) - set(valid_genes_user)
-    data_rna_non_tf = data_rna[:, sorted(list(non_tf_candidates))].copy()
+    data_rna_non_tf = data_rna[:, sorted(non_tf_candidates)].copy()
     sc.pp.normalize_total(data_rna_non_tf)
     sc.pp.log1p(data_rna_non_tf)
     sc.pp.highly_variable_genes(data_rna_non_tf, n_top_genes=num_genes_hvg, subset=True)
