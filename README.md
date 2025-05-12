@@ -25,27 +25,16 @@ These datasets must be paired — i.e., RNA and ATAC should come from the **same
 
 ## Installation
 
-To install all dependencies for scDoRI, we recommend using [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) or [Micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html). The dependencies are provided in a yml file and installation would take a couple of minutes.
+To install all dependencies for scDoRI, we recommend using [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) or [Micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html).
 
 ```bash
-git clone https://github.com/saraswatmanu/scDoRI.git
-cd scDoRI
-conda env create -f environment.yml
-conda activate scdori_env
-
 # Install the scDoRI package
-pip install . --no-deps
+pip install -e . --no-deps
 ```
 
-<!-- or install the latest development version directly into your existing environment:
+Make sure the `-e` flag is used to install the package in editable mode.
 
-```bash
-pip install git+https://github.com/bioFAM/scDoRI@main
-``` -->
-
-
-> ⚡ **Note**: The training process is GPU-accelerated and **highly recommended** to be run on a GPU-enabled machine.
-> While preprocessing can run on CPU, training large datasets on CPU is not advised due to slow performance.
+The training process is GPU-accelerated and **highly recommended** to be run on a GPU-enabled machine. While preprocessing can run on CPU, training large datasets on CPU is not advised due to slow performance. If a GPU is available, the GPU-accelerated version will be installed automatically.
 
 
 ## Usage

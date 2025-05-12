@@ -27,7 +27,7 @@ dependencies = [
   "pybedtools",
   "gtfparse",
   "harmonypy",
-  "numpy",
+  "numpy<2",
   "pandas",
   "scanpy",
   "scikit-learn",
