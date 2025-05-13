@@ -32,6 +32,10 @@ To install all dependencies for scDoRI, we recommend using [Conda](https://docs.
 git clone https://github.com/bioFAM/scDoRI.git
 cd scDoRI
 
+# create a new environment
+conda create -n scdori python -y
+conda activate scdori
+
 # Install the scDoRI package
 pip install -e . --no-deps
 ```
