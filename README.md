@@ -38,7 +38,7 @@ The training process is GPU-accelerated and **highly recommended** to be run on 
 
 
 ## Usage
-You’ll work through two notebooks, using two separate config files to set parameters for your dataset preprocessing and training.
+You’ll work through three notebooks - Preprocessing, Training and Downstream analysis. This will require two separate config files to set parameters for your dataset preprocessing and training.
 ### Step 1: Preprocessing
 #### Edit paths and parameters in:
 ```bash
