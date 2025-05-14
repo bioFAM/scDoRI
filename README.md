@@ -103,5 +103,5 @@ Includes:
 - (upcoming) Customization tips
 
 ## Citation
-If you use scDoRI in your work, please cite our preprint/paper (coming soon).
-Until then, feel free to open an issue or get in touch at manu.saraswat@dkfz.de
+If you use scDoRI in your work, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2025.05.13.653733v1).
+Feel free to open an issue or get in touch at manu.saraswat@dkfz.de
