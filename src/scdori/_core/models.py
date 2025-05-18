@@ -269,19 +269,21 @@ class scDoRI(nn.Module):
 
         if skip_computations and cache_key in self._cache:
             # Retrieve cached values
+            # Load detached tensors to avoid unnecessary computation
+            # and to save memory
             cached = self._cache[cache_key]
-            theta = cached['theta']
-            mu_theta = cached['mu_theta']
-            preds_atac = cached['preds_atac']
-            preds_tf = cached['preds_tf']
-            mu_nb_tf = cached['mu_nb_tf']
-            preds_rna = cached['preds_rna']
-            mu_nb_rna = cached['mu_nb_rna']
-            topic_peak_denoised1 = cached['topic_peak_denoised1']
-            grn_atac_activator = cached['grn_atac_activator']
-            grn_atac_repressor = cached['grn_atac_repressor']
-            library_factor_tf = cached['library_factor_tf']
-            library_factor_rna = cached['library_factor_rna']
+            theta = cached['theta'].detach()
+            mu_theta = cached['mu_theta'].detach()
+            preds_atac = cached['preds_atac'].detach()
+            preds_tf = cached['preds_tf'].detach()
+            mu_nb_tf = cached['mu_nb_tf'].detach()
+            preds_rna = cached['preds_rna'].detach()
+            mu_nb_rna = cached['mu_nb_rna'].detach()
+            topic_peak_denoised1 = cached['topic_peak_denoised1'].detach()
+            grn_atac_activator = cached['grn_atac_activator'].detach()
+            grn_atac_repressor = cached['grn_atac_repressor'].detach()
+            library_factor_tf = cached['library_factor_tf'].detach()
+            library_factor_rna = cached['library_factor_rna'].detach()
         else:
             # Compute all values
             theta, mu_theta = self.encode(rna_input, atac_input, log_lib_rna, log_lib_atac, num_cells)
@@ -313,7 +315,7 @@ class scDoRI(nn.Module):
             rna_logits = self.rna_batch_norm(rna_logits)
             preds_rna = F.softmax(rna_logits, dim=-1)
 
-            topic_peak_denoised1 = nn.Softmax(dim=1)(self.topic_peak_decoder)
+            topic_peak_denoised1 = F.softmax(self.topic_peak_decoder, dim=1)
 
             # library MLP for RNA
             library_factor_rna = self.rna_library_factor(rna_input)
@@ -321,57 +323,55 @@ class scDoRI(nn.Module):
 
             # Compute GRN variables that can be cached
             if phase == "grn":
-                grn_atac_activator = torch.empty(size=(self.num_topics, self.num_tfs, self.num_genes)).to(self.device)
-                grn_atac_repressor = torch.empty(size=(self.num_topics, self.num_tfs, self.num_genes)).to(self.device)
+                grn_atac_activator = torch.zeros(size=(self.num_topics, self.num_tfs, self.num_genes)).to(self.device)
+                grn_atac_repressor = torch.zeros(size=(self.num_topics, self.num_tfs, self.num_genes)).to(self.device)
 
                 # Calculate ATAC-based TF–gene links (activator/repressor) for each topic
                 for topic in range(self.num_topics):
-                    topic_gene_peak = topic_peak_denoised1[topic][:, None] * gene_peak
-                    G_topic = self.tf_binding_matrix_activator.T @ topic_gene_peak
-                    G_topic = G_topic / (gene_peak.sum(axis=0, keepdims=True) + 1e-7)
+                    topic_gene_peak = topic_peak_denoised1[topic].unsqueeze(1) * gene_peak
+                    G_topic = torch.mm(self.tf_binding_matrix_activator.T, topic_gene_peak)
+                    G_topic = G_topic / (gene_peak.sum(dim=0, keepdim=True) + 1e-7)
                     grn_atac_activator[topic] = G_topic
 
-                    topic_gene_peak = (1 / (topic_peak_denoised1[topic] + 1e-20))[:, None] * gene_peak
-                    G_topic = self.tf_binding_matrix_repressor.T @ topic_gene_peak
-                    G_topic = G_topic / (gene_peak.sum(axis=0, keepdims=True) + 1e-7)
+                    topic_gene_peak = (1 / (topic_peak_denoised1[topic] + 1e-20)).unsqueeze(1) * gene_peak
+                    G_topic = torch.mm(self.tf_binding_matrix_repressor.T, topic_gene_peak)
+                    G_topic = G_topic / (gene_peak.sum(dim=0, keepdim=True) + 1e-7)
                     grn_atac_repressor[topic] = G_topic
 
                 # Cache computed values if in GRN phase
                 self._cache[cache_key] = {
-                    'theta': theta,
-                    'mu_theta': mu_theta,
-                    'preds_atac': preds_atac,
-                    'preds_tf': preds_tf,
-                    'mu_nb_tf': mu_nb_tf,
-                    'preds_rna': preds_rna,
-                    'mu_nb_rna': mu_nb_rna,
-                    'topic_peak_denoised1': topic_peak_denoised1,
-                    'grn_atac_activator': grn_atac_activator,
-                    'grn_atac_repressor': grn_atac_repressor,
-                    'library_factor_tf': library_factor_tf,
-                    'library_factor_rna': library_factor_rna,
+                    'theta': theta.clone(),
+                    'mu_theta': mu_theta.clone(),
+                    'preds_atac': preds_atac.clone(),
+                    'preds_tf': preds_tf.clone(),
+                    'mu_nb_tf': mu_nb_tf.clone(),
+                    'preds_rna': preds_rna.clone(),
+                    'mu_nb_rna': mu_nb_rna.clone(),
+                    'topic_peak_denoised1': topic_peak_denoised1.clone(),
+                    'grn_atac_activator': grn_atac_activator.clone(),
+                    'grn_atac_repressor': grn_atac_repressor.clone(),
+                    'library_factor_tf': library_factor_tf.clone(),
+                    'library_factor_rna': library_factor_rna.clone(),
                 }
 
         # Always compute GRN-specific variables (not cached)
         if phase == "grn":
-            C = torch.empty(size=(self.num_topics, self.num_genes)).to(self.device)
+            C = torch.zeros(size=(self.num_topics, self.num_genes)).to(self.device)
             tf_expression_input = topic_tf_input.to(self.device)
             for topic in range(self.num_topics):
                 gene_atac_activator_topic = grn_atac_activator[topic] / (grn_atac_activator[topic].max() + 1e-15)
                 gene_atac_repressor_topic = grn_atac_repressor[topic] / (grn_atac_repressor[topic].min() + 1e-15)
 
-                G_act = gene_atac_activator_topic * torch.nn.functional.relu(self.tf_gene_topic_activator_grn[topic])
-                G_rep = (
-                    gene_atac_repressor_topic * -1 * torch.nn.functional.relu(self.tf_gene_topic_repressor_grn[topic])
-                )
+                G_act = gene_atac_activator_topic * F.relu(self.tf_gene_topic_activator_grn[topic])
+                G_rep = gene_atac_repressor_topic * -1 * F.relu(self.tf_gene_topic_repressor_grn[topic])
 
-                C[topic] = tf_expression_input[topic] @ G_act + tf_expression_input[topic] @ G_rep
+                C[topic] = torch.mm(tf_expression_input[topic].unsqueeze(0), G_act).squeeze(0) + torch.mm(tf_expression_input[topic].unsqueeze(0), G_rep).squeeze(0)
 
             batch_factor_rna_grn = torch.mm(batch_onehot, self.rna_grn_batch_factor)
             preds_rna_from_grn = torch.mm(theta, C)
             preds_rna_from_grn = preds_rna_from_grn + batch_factor_rna_grn
             preds_rna_from_grn = self.rna_grn_batch_norm(preds_rna_from_grn)
-            preds_rna_from_grn = nn.Softmax(dim=1)(preds_rna_from_grn)
+            preds_rna_from_grn = F.softmax(preds_rna_from_grn, dim=1)
         else:
             preds_rna_from_grn = torch.zeros_like(preds_rna)
 
