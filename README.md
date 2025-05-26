@@ -37,7 +37,7 @@ conda create -n scdori python -y
 conda activate scdori
 
 # Install the scDoRI package
-pip install -e . --no-deps
+pip install -e .
 ```
 
 Make sure the `-e` flag is used to install the package in editable mode.
