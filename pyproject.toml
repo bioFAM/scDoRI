@@ -40,7 +40,8 @@ dependencies = [
   "ipykernel",
   "ipython",
   "jupyter",
-  "decoupler"
+  "decoupler",
+  "leidenalg"
 ]
 optional-dependencies.dev = [
   "pre-commit",
