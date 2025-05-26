@@ -36,6 +36,9 @@ cd scDoRI
 conda create -n scdori python=3.12 -y
 conda activate scdori
 
+# Install BEDTools dependencies, e.g., via conda (if not installed on your system)
+conda install --channel conda-forge --channel bioconda bedtools htslib -y
+
 # Install the scDoRI package
 pip install -e .
 ```
