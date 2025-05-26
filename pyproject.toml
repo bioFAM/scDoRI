@@ -38,6 +38,10 @@ dependencies = [
   "session-info2",  # for debug logging (referenced from the issue template)
   "torch",
   "tqdm",
+  "ipykernel",
+  "ipython",
+  "jupyter",
+  "decoupler"
 ]
 optional-dependencies.dev = [
   "pre-commit",

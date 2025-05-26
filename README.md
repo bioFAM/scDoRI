@@ -33,7 +33,7 @@ git clone https://github.com/bioFAM/scDoRI.git
 cd scDoRI
 
 # create a new environment
-conda create -n scdori python -y
+conda create -n scdori python=3.12 -y
 conda activate scdori
 
 # Install the scDoRI package
