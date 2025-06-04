@@ -21,7 +21,8 @@ scDoRI expects **single-cell multiome data** with the following inputs:
 - `ATAC`: an AnnData `.h5ad` object with **cells × peaks** accessibility matrix
   - Peaks must include genomic coordinates in `.var` (columns: `chr`, `start`, `end`)
 
-These datasets must be paired — i.e., RNA and ATAC should come from the **same cells**.
+These datasets must be paired — i.e., RNA and ATAC should come from the **same cells**. Make sure that **.X** of anndata objects contain raw counts.
+
 
 ## Installation
 
