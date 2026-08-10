@@ -67,7 +67,9 @@ to specify the location of RNA and ATAC anndata .h5ad files, motif file, and set
 docs/notebooks/preprocessing.ipynb
 ```
 This step can take between a few hours to a day depending on the dataset size and number of features selected.
+
 **Expected output:** preprocessed RNA and ATAC AnnData objects, the in-silico ChIP-seq TF–peak matrices and gene-peak distance matrices, written to the output paths set in `config.py`.
+
 ### Step 2: Training
 
 #### Edit paths and parameters in:
