@@ -61,13 +61,13 @@ src/scdori/pp/config.py
 ```
 to specify the location of RNA and ATAC anndata .h5ad files, motif file, and set number of peaks/genes/TFs to train on.
 
-**Expected output:** preprocessed RNA and ATAC AnnData objects, the in-silico ChIP-seq TF–peak matrices and gene-peak distance matrices, written to the output paths set in `config.py`.
 
 #### Run preprocessing notebook
 ```bash
 docs/notebooks/preprocessing.ipynb
 ```
 This step can take between a few hours to a day depending on the dataset size and number of features selected.
+**Expected output:** preprocessed RNA and ATAC AnnData objects, the in-silico ChIP-seq TF–peak matrices and gene-peak distance matrices, written to the output paths set in `config.py`.
 ### Step 2: Training
 
 #### Edit paths and parameters in:
@@ -75,11 +75,13 @@ This step can take between a few hours to a day depending on the dataset size an
 src/scdori/_core/config.py
 ```
 for scDoRI hyperparameters (number of topics, learning rate, epochs etc.) and specify path for preprocessed anndata objects and insilico-chipseq files
+
 #### Run training notebook
 ```bash
 docs/notebooks/training.ipynb
 ```
 This step again can take between a few hours to a day depending on the dataset size and number of features selected.
+
 **Expected output:** a trained scDoRI model checkpoint and the learned latent Topic activities, topic–peak, topic–gene and topic–TF matrices.
 
 ### Step 3: Downstream analysis
