@@ -47,6 +47,9 @@ pip install -e .
 Make sure the `-e` flag is used to install the package in editable mode.
 
 The training process is GPU-accelerated and **highly recommended** to be run on a GPU-enabled machine. While preprocessing can run on CPU, training large datasets on CPU is not advised due to slow performance. If a GPU is available, the GPU-accelerated version will be installed automatically.
+GPU memory scales with the number of selected features; as a guide, a GPU with 12–15 GB of memory supports ~4,000 genes, 70,000 peaks and 300 TFs. Larger feature sets require proportionally more memory. 
+
+**Software dependencies:** Python 3.12; BEDTools and HTSlib (installable via conda/bioconda, see below); all Python dependencies and their pinned versions are listed in `pyproject.toml` and installed automatically by `pip install -e .`.
 
 
 ## Usage
@@ -57,6 +60,9 @@ You’ll work through three notebooks - Preprocessing, Training and Downstream a
 src/scdori/pp/config.py
 ```
 to specify the location of RNA and ATAC anndata .h5ad files, motif file, and set number of peaks/genes/TFs to train on.
+
+**Expected output:** preprocessed RNA and ATAC AnnData objects, the in-silico ChIP-seq TF–peak matrices and gene-peak distance matrices, written to the output paths set in `config.py`.
+
 #### Run preprocessing notebook
 ```bash
 docs/notebooks/preprocessing.ipynb
@@ -74,12 +80,15 @@ for scDoRI hyperparameters (number of topics, learning rate, epochs etc.) and sp
 docs/notebooks/training.ipynb
 ```
 This step again can take between a few hours to a day depending on the dataset size and number of features selected.
+**Expected output:** a trained scDoRI model checkpoint and the learned latent Topic activities, topic–peak, topic–gene and topic–TF matrices.
+
 ### Step 3: Downstream analysis
 
 #### Run downstream analysis notebook
 ```bash
 docs/notebooks/downstream.ipynb
 ```
+**Expected output:** topic-specific eGRNs, TF activity scores, and the downstream tables and visualisations described in the documentation.
 
 ## Dataset Demonstration
 
