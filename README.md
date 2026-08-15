@@ -1,4 +1,4 @@
-# scDoRI: Single-cell Deep Multi-Omic Regulatory Inference
+# scDORI: Single-cell Deep Multi-Omic Regulatory Inference
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21937078.svg)](https://doi.org/10.5281/zenodo.21937078)
 [![Documentation Status](https://readthedocs.org/projects/scdori/badge/?version=latest)](https://scdori.readthedocs.io/en/latest/)
 [![codecov](https://codecov.io/gh/bioFAM/scDoRI/graph/badge.svg?token=RK6G4LBUHL)](https://codecov.io/gh/bioFAM/scDoRI)
