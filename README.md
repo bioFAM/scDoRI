@@ -5,7 +5,7 @@
 
 ![graphical abstract](https://raw.githubusercontent.com/bioFAM/scDoRI/refs/heads/main/docs/_static/scdori_schematic_main.png)
 
-**scDoRI** is a deep learning model for single-cell **multiome** data (RNA + ATAC in same cell) that infers **enhancer-mediated gene regulatory networks (eGRNs)**. By combining an **encoder–decoder** approach with mechanistic constraints (enhancer–gene links, TF binding logic), scDoRI learns **topics** that group co-accessible peaks, their cis-linked genes and upstream activator and repressor TFs – all while scaling to large datasets via mini-batches.
+**scDORI** is a deep learning model for single-cell **multiome** data (RNA + ATAC in same cell) that infers **enhancer-mediated gene regulatory networks (eGRNs)**. By combining an **encoder–decoder** approach with mechanistic constraints (enhancer–gene links, TF binding logic), scDoRI learns **topics** that group co-accessible peaks, their cis-linked genes and upstream activator and repressor TFs – all while scaling to large datasets via mini-batches.
 
 ## Highlights
 - 🔄 **Unified** approach: a single model for dimensionality reduction + eGRN inference
@@ -15,7 +15,7 @@
 
 ## Input Requirements
 
-scDoRI expects **single-cell multiome data** with the following inputs:
+scDORI expects **single-cell multiome data** with the following inputs:
 
 - `RNA`: an AnnData `.h5ad` object with **cells × genes** expression matrix
 - `ATAC`: an AnnData `.h5ad` object with **cells × peaks** accessibility matrix
