@@ -339,7 +339,7 @@ def train_scdori_phases(
             total_loss = weights["atac"] * loss_atac + weights["tf"] * loss_tf + weights["rna"] * loss_rna + loss_norm
 
             optimizer.zero_grad()
-            total_loss.backward()
+            total_loss.backward(retain_graph=True)
             optimizer.step()
 
             running_loss += total_loss.item()
